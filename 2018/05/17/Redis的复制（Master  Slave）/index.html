@@ -1,0 +1,46 @@
+<!DOCTYPE html><html lang="zh-CN"><head><meta name="generator" content="Hexo 3.9.0"><meta http-equiv="content-type" content="text/html; charset=utf-8"><meta content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=0" name="viewport"><meta content="yes" name="apple-mobile-web-app-capable"><meta content="black-translucent" name="apple-mobile-web-app-status-bar-style"><meta content="telephone=no" name="format-detection"><meta name="description"><title>Redis的复制（Master | Slave） | Vic</title><link rel="stylesheet" type="text/css" href="/css/style.css?v=0.0.0"><link rel="stylesheet" type="text/css" href="//lib.baomitu.com/normalize/8.0.1/normalize.min.css"><link rel="stylesheet" type="text/css" href="//lib.baomitu.com/pure/1.0.0/pure-min.css"><link rel="stylesheet" type="text/css" href="//lib.baomitu.com/pure/1.0.0/grids-responsive-min.css"><link rel="stylesheet" href="//lib.baomitu.com/font-awesome/4.7.0/css/font-awesome.min.css"><script type="text/javascript" src="//lib.baomitu.com/jquery/3.4.0/jquery.min.js"></script><link rel="icon" mask sizes="any" href="/favicon.ico"><link rel="Shortcut Icon" type="image/x-icon" href="/favicon.ico"><link rel="apple-touch-icon" href="/apple-touch-icon.png"><link rel="apple-touch-icon-precomposed" href="/apple-touch-icon.png"></head><body><div class="body_container"><div id="header"><div class="site-name"><h1 class="hidden">Redis的复制（Master | Slave）</h1><a id="logo" href="/.">Vic</a><p class="description">Simon,I just don't know</p></div><div id="nav-menu"><a class="current" href="/."><i class="fa fa-home"> 首页</i></a><a href="/archives/"><i class="fa fa-archive"> 归档</i></a><a href="/about/"><i class="fa fa-user"> 关于</i></a><a href="/atom.xml"><i class="fa fa-rss"> 订阅</i></a></div></div><div class="pure-g" id="layout"><div class="pure-u-1 pure-u-md-3-4"><div class="content_container"><div class="post"><h1 class="post-title">Redis的复制（Master | Slave）</h1><div class="post-meta">May 17, 2018<span> | </span><span class="category"><a href="/categories/Redis/">Redis</a></span><script src="https://busuanzi.ibruce.info/busuanzi/2.3/busuanzi.pure.mini.js" async></script><span id="busuanzi_container_page_pv"> | <span id="busuanzi_value_page_pv"></span><span> 阅读</span></span></div><div class="post-content"><ul>
+<li><h4 id="Redis复制简介"><a href="#Redis复制简介" class="headerlink" title="Redis复制简介"></a>Redis复制简介</h4><p>行话：也就是我们所说的主从复制，主机数据更新后根据配置和策略，自动同步到备机的master/slaver机制，master以写为主，slave以读为主；</p>
+</li>
+<li><h4 id="Redis的复制能干什么"><a href="#Redis的复制能干什么" class="headerlink" title="Redis的复制能干什么"></a>Redis的复制能干什么</h4><p>读写分离；<br>容灾恢复；</p>
+</li>
+<li><h4 id="Redis复制如何去应用"><a href="#Redis复制如何去应用" class="headerlink" title="Redis复制如何去应用"></a>Redis复制如何去应用</h4><ol>
+<li><p>配从(库)不配主(库)；</p>
+</li>
+<li><p>从库配置：执行命令<code>slaveof 主库IP 主库端口</code>：</p>
+<p>每次与master断开之后，都需要重新连接，除非你配置进redis.conf文件；<br>执行命令<code>info replication</code>查看主从关系；</p>
+</li>
+<li><p>修改配置文件细节操作：</p>
+<p>拷贝多个redis.conf文件；<br>开启daemonize yes；<br>修改pid文件名字；<br>修改指定端口；<br>修改log文件名字；<br>修改dump.rdb名字；</p>
+</li>
+<li><p>常用三招</p>
+<p><strong>一主多仆</strong><br>一个master两个slave；<br><strong>一些问题？</strong><br>(1) 切入点问题？slave1、slave2是从头开始复制还是从切入点开始复制?<br>答：从头开始复制；<br>(2) 从机是否可以写？set可否？<br>答：从机不可以写，也就不能set；<br>(3) 主机shutdown后情况如何？从机是上位还是原地待命?<br>答：原地待命；<br>(4) 主机又回来了后，主机新增记录，从机还能否顺利复制？<br>答：可以；<br>(5) 其中一台从机宕掉后情况如何？恢复它能跟上主机吗？<br>答：不能，需要重新建立主从关系；<br><strong>薪火相传</strong><br>上一个Slave可以是下一个slave的Master，Slave同样可以接收其他slaves的连接和同步请求，那么该slave作为了链条中下一个的master,可以有效减轻master的写压力。<br>中途变更转向:会清除之前的数据，重新建立拷贝最新的。<br><strong>反客为主</strong><br>主机宕掉后，从机升级为主机：<br>选择一个从机手动执行<code>slaveof no one</code>命令变更为主机，其他从机与该主机建立主从关系。</p>
+</li>
+</ol>
+</li>
+<li><h4 id="Redis复制的原理"><a href="#Redis复制的原理" class="headerlink" title="Redis复制的原理"></a>Redis复制的原理</h4><p>master接到命令启动后台的存盘进程，同时收集所有接收到的用于修改数据集命令，在后台进程执行完毕之后，master将传送整个数据文件到slave,以完成一次完全同步<br><strong>全量复制</strong>：而slave服务在接收到数据库文件数据后，将其存盘并加载到内存中。slave第一次同步为全量复制。<br><strong>增量复制</strong>：master继续将新的所有收集到的修改命令依次传给slave,完成同步<br>但是只要是重新连接master,第一次完全同步（全量复制)将被自动执行。</p>
+</li>
+<li><h3 id="哨兵模式-sentinel"><a href="#哨兵模式-sentinel" class="headerlink" title="哨兵模式(sentinel)"></a>哨兵模式(sentinel)</h3><ol>
+<li>哨兵模式简介</li>
+</ol>
+<p>反客为主的自动版，能够后台监控主机是否故障，如果故障了根据投票数自动将从库转换为主库；</p>
+<ol>
+<li>启动哨兵模式步骤：</li>
+</ol>
+<ul>
+<li><p>自定义的/myredis目录下新建sentinel.conf文件，名字绝不能错；</p>
+</li>
+<li><p>配置哨兵,填写内容在sentinel.conf文件中配置：</p>
+<p><code>sentinel monitor 被监控数据库名字(自己起个名字) 127.0.0.1 6379 1</code><br>上面最后一个数字1，表示主机挂掉后salve投票看让谁接替成为主机，得票数多的成为主机；</p>
+</li>
+<li><p>启动哨兵</p>
+<p>执行命令：<code>redis-sentinel /myredis/sentinel.conf</code>（目录依照各自的实际情况配置，可能目录不同）；</p>
+</li>
+<li><p><strong>问题</strong></p>
+<p>如果之前的master重启回来，会不会双master冲突？<br>不会造成双冲突，之前的master会成为slave。</p>
+</li>
+</ul>
+</li>
+<li><h4 id="复制的缺点"><a href="#复制的缺点" class="headerlink" title="复制的缺点"></a>复制的缺点</h4><p><strong>复制延时</strong><br>由于所有的写操作都是先在Master上操作，然后同步更新到Slave上，所以从Master同步到Slave机器有一定的延迟，当系统很繁忙的时候，延迟问题会更加严重，Slave机器数量的增加也会使这个问题更加严重。</p>
+</li>
+</ul>
+</div><div class="tags"><a href="/tags/Redis/">Redis</a></div><div class="post-nav"><a class="pre" href="/2018/05/21/Redis的事务/">Redis的事务</a><a class="next" href="/2018/05/15/Redis持久化/">Redis持久化</a></div></div></div></div><div class="pure-u-1-4 hidden_mid_and_down"><div id="sidebar"><div class="widget"><form class="search-form" action="//www.google.com/search" method="get" accept-charset="utf-8" target="_blank"><input type="text" name="q" maxlength="20" placeholder="Search"><input type="hidden" name="sitesearch" value="http://yoursite.com"></form></div><div class="widget"><div class="widget-title"><i class="fa fa-folder-o"> 分类</i></div><ul class="category-list"><li class="category-list-item"><a class="category-list-link" href="/categories/Redis/">Redis</a><span class="category-list-count">7</span></li><li class="category-list-item"><a class="category-list-link" href="/categories/categories/">categories</a><span class="category-list-count">1</span></li></ul></div><div class="widget"><div class="widget-title"><i class="fa fa-star-o"> 标签</i></div><div class="tagcloud"><a href="/tags/Hexo/" style="font-size: 15px;">Hexo</a> <a href="/tags/Redis/" style="font-size: 15px;">Redis</a> <a href="/tags/spring/" style="font-size: 15px;">spring</a> <a href="/tags/面试题/" style="font-size: 15px;">面试题</a></div></div><div class="widget"><div class="widget-title"><i class="fa fa-file-o"> 最近文章</i></div><ul class="post-list"><li class="post-list-item"><a class="post-list-link" href="/2018/05/23/Redis的Java客户端Jedis/">Redis的Java客户端Jedis</a></li><li class="post-list-item"><a class="post-list-link" href="/2018/05/21/Redis的事务/">Redis的事务</a></li><li class="post-list-item"><a class="post-list-link" href="/2018/05/17/Redis的复制（Master  Slave）/">Redis的复制（Master | Slave）</a></li><li class="post-list-item"><a class="post-list-link" href="/2018/05/15/Redis持久化/">Redis持久化</a></li><li class="post-list-item"><a class="post-list-link" href="/2018/05/09/解析Redis配置文件（redis.conf）/">解析Redis配置文件（redis.conf）</a></li><li class="post-list-item"><a class="post-list-link" href="/2018/05/07/Redis数据类型/">Redis的数据类型</a></li><li class="post-list-item"><a class="post-list-link" href="/2018/05/06/Redis入门介绍/">Redis入门介绍</a></li><li class="post-list-item"><a class="post-list-link" href="/2018/04/05/关于值传递和引用传递/">关于值传递和引用传递</a></li><li class="post-list-item"><a class="post-list-link" href="/2018/04/03/Hexo如何插入本地图片/">Hexo如何插入本地图片</a></li><li class="post-list-item"><a class="post-list-link" href="/2018/02/21/Spring常见的三种注入方式/">Spring通过DI(依赖注入)实现IOC(控制反转)</a></li></ul></div><div class="widget"><div class="widget-title"><i class="fa fa-external-link"> 友情链接</i></div><ul></ul><a href="http://www.example1.com/" title="site-name1" target="_blank">site-name1</a><ul></ul><a href="http://www.example2.com/" title="site-name2" target="_blank">site-name2</a><ul></ul><a href="http://www.example3.com/" title="site-name3" target="_blank">site-name3</a></div></div></div><div class="pure-u-1 pure-u-md-3-4"><div id="footer">Copyright © 2019 <a href="/." rel="nofollow">Vic.</a> Powered by<a rel="nofollow" target="_blank" href="https://hexo.io"> Hexo.</a><a rel="nofollow" target="_blank" href="https://github.com/tufu9441/maupassant-hexo"> Theme</a> by<a rel="nofollow" target="_blank" href="https://github.com/pagecho"> Cho.</a></div></div></div><a class="show" id="rocket" href="#top"></a><script type="text/javascript" src="/js/totop.js?v=0.0.0" async></script><script type="text/javascript" src="//lib.baomitu.com/fancybox/3.5.7/jquery.fancybox.min.js" async></script><script type="text/javascript" src="/js/fancybox.js?v=0.0.0" async></script><link rel="stylesheet" type="text/css" href="//lib.baomitu.com/fancybox/3.5.7/jquery.fancybox.min.css"><script type="text/javascript" src="/js/codeblock-resizer.js?v=0.0.0"></script><script type="text/javascript" src="/js/smartresize.js?v=0.0.0"></script></div></body></html>
