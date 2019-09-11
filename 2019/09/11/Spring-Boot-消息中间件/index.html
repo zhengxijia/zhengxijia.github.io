@@ -1,0 +1,204 @@
+<!DOCTYPE html><html lang="zh-CN"><head><meta name="generator" content="Hexo 3.9.0"><meta http-equiv="content-type" content="text/html; charset=utf-8"><meta content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=0" name="viewport"><meta content="yes" name="apple-mobile-web-app-capable"><meta content="black-translucent" name="apple-mobile-web-app-status-bar-style"><meta content="telephone=no" name="format-detection"><meta name="description"><title>Spring Boot 消息中间件 | Vic</title><link rel="stylesheet" type="text/css" href="/css/style.css?v=0.0.0"><link rel="stylesheet" type="text/css" href="//lib.baomitu.com/normalize/8.0.1/normalize.min.css"><link rel="stylesheet" type="text/css" href="//lib.baomitu.com/pure/1.0.0/pure-min.css"><link rel="stylesheet" type="text/css" href="//lib.baomitu.com/pure/1.0.0/grids-responsive-min.css"><link rel="stylesheet" href="//lib.baomitu.com/font-awesome/4.7.0/css/font-awesome.min.css"><script type="text/javascript" src="//lib.baomitu.com/jquery/3.4.0/jquery.min.js"></script><link rel="icon" mask sizes="any" href="/favicon.ico"><link rel="Shortcut Icon" type="image/x-icon" href="/favicon.ico"><link rel="apple-touch-icon" href="/apple-touch-icon.png"><link rel="apple-touch-icon-precomposed" href="/apple-touch-icon.png"></head><body><div class="body_container"><div id="header"><div class="site-name"><h1 class="hidden">Spring Boot 消息中间件</h1><a id="logo" href="/.">Vic</a><p class="description">Simon,I just don't know</p></div><div id="nav-menu"><a class="current" href="/."><i class="fa fa-home"> 首页</i></a><a href="/archives/"><i class="fa fa-archive"> 归档</i></a><a href="/about/"><i class="fa fa-user"> 关于</i></a><a href="/atom.xml"><i class="fa fa-rss"> 订阅</i></a></div></div><div class="pure-g" id="layout"><div class="pure-u-1 pure-u-md-3-4"><div class="content_container"><div class="post"><h1 class="post-title">Spring Boot 消息中间件</h1><div class="post-meta">Sep 11, 2019<span> | </span><span class="category"><a href="/categories/Spring-Boot高级/">Spring Boot高级</a></span><script src="https://busuanzi.ibruce.info/busuanzi/2.3/busuanzi.pure.mini.js" async></script><span id="busuanzi_container_page_pv"> | <span id="busuanzi_value_page_pv"></span><span> 阅读</span></span></div><div class="post-content"><h3 id="1、JMS-amp-AMQP简介"><a href="#1、JMS-amp-AMQP简介" class="headerlink" title="1、JMS&amp;AMQP简介"></a>1、JMS&amp;AMQP简介</h3><p>1、异步处理</p>
+<p>同步机制</p>
+<p><img src="/2019/09/11/Spring-Boot-消息中间件/09.%E5%90%8C%E6%AD%A5.png" alt="09.同步"></p>
+<p>并发机制</p>
+<p><img src="/2019/09/11/Spring-Boot-消息中间件/10.%E5%BC%82%E6%AD%A5.png" alt="10.异步"></p>
+<p>消息队列机制</p>
+<p><img src="/2019/09/11/Spring-Boot-消息中间件/11.%E6%B6%88%E6%81%AF.png" alt="11.消息"></p>
+<p>2、应用解耦</p>
+<p>使用中间件，将两个服务解耦，一个写入，一个订阅</p>
+<p>3、流量削锋</p>
+<p>例如消息队列的FIFO，限定元素的长度，防止出现多次请求导致的误操作</p>
+<h4 id="概述"><a href="#概述" class="headerlink" title="概述"></a>概述</h4><p>1、大多数应用，可以通过消息服务中间件来提升系统的异步通信、拓展解耦能力</p>
+<p>2、消息服务中的两个重要概念：</p>
+<p>消息代理（message broker）和目的地（destination）,当消息发送者发送消息以后，将由消息代理接管，消息代理保证消息传递到指定的目的地。</p>
+<p>3、消息队列主要的两种形式的目的地</p>
+<p>1）、队列（queue）：点对点消息通信【point-to-point】，取出一个没一个，一个发布，多个消费</p>
+<p>2）、主题（topic）:发布（publish）/订阅（subscribe）消息通信，多人【订阅者】可以同时接到消息</p>
+<p>4、JMS(Java Message Service) Java消息服务：</p>
+<ul>
+<li>基于JVM消息规范的代理。ActiveMQ/HornetMQ是JMS的实现</li>
+</ul>
+<p>5、AMQP(Advanced Message Queuing Protocol)</p>
+<ul>
+<li>高级消息队列协议，也是一个消息代理的规范，兼容JMS</li>
+<li>RabbitMQ是AMQP的实现</li>
+</ul>
+<table>
+<thead>
+<tr>
+<th></th>
+<th>JMS</th>
+<th>AMQP</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>定义</td>
+<td>Java API</td>
+<td>网络线级协议</td>
+</tr>
+<tr>
+<td>跨平台</td>
+<td>否</td>
+<td>是</td>
+</tr>
+<tr>
+<td>跨语言</td>
+<td>否</td>
+<td>是</td>
+</tr>
+<tr>
+<td>Model</td>
+<td>(1)、Peer-2-Peer<br>(2)、Pub/Sub</td>
+<td>(1)、direct exchange<br>(2)、fanout exchange<br>(3)、topic change<br>(4)、headers exchange<br>(5)、system exchange<br>后四种都是pub/sub ,差别路由机制做了更详细的划分</td>
+</tr>
+<tr>
+<td>支持消息类型</td>
+<td>TextMessage<br>MapMessage<br>ByteMessage<br>StreamMessage<br>ObjectMessage<br>Message</td>
+<td>byte[]通常需要序列化</td>
+</tr>
+</tbody></table>
+<p>6、SpringBoot的支持</p>
+<p>spring-jms提供了对JMS的支持</p>
+<p>spring-rabbit提供了对AMQP的支持</p>
+<p>需要创建ConnectionFactory的实现来连接消息代理</p>
+<p>提供JmsTemplate,RabbitTemplate来发送消息</p>
+<p>@JmsListener(JMS).@RabbitListener(AMQP)注解在方法上的监听消息代理发布的消息</p>
+<p>@EnableJms,@EnableRabbit开启支持</p>
+<p>7、SpringBoot的自动配置</p>
+<ul>
+<li>JmsAutoConfiguration</li>
+<li>RabbitAutoConfiguration</li>
+</ul>
+<h3 id="2、RabbitMQ简介"><a href="#2、RabbitMQ简介" class="headerlink" title="2、RabbitMQ简介"></a>2、RabbitMQ简介</h3><blockquote>
+<p>AMQP的实现</p>
+</blockquote>
+<h4 id="1、核心概念"><a href="#1、核心概念" class="headerlink" title="1、核心概念"></a>1、核心概念</h4><p><strong>Message</strong>:消息头和消息体组成，消息体是不透明的，而消息头上则是由一系列的可选属性组成，属性：路由键【routing-key】,优先级【priority】,指出消息可能需要持久性存储【delivery-mode】</p>
+<p><strong>Publisher</strong>:消息的生产者，也是一个向交换器发布消息的客户端应用程序</p>
+<p><strong>Exchange</strong>:交换器，用来接收生产者发送的消息并将这些消息路由给服务器中的队列</p>
+<p>Exchange的4中类型：direct【默认】点对点，fanout,topic和headers, 发布订阅，不同类型的Exchange转发消息的策略有所区别</p>
+<p><strong>Queue</strong>:消息队列，用来保存消息直到发送给消费者，它是消息的容器，也是消息的终点，一个消息可投入一个或多个队列，消息一直在队列里面，等待消费者连接到这个队列将数据取走。</p>
+<p><strong>Binding</strong>:绑定，队列和交换机之间的关联，多对多关系</p>
+<p><strong>Connection</strong>:网络连接，例如TCP连接</p>
+<p>Channel:信道，多路复用连接中的一条独立的双向数据流通道，信道是建立在真是的TCP链接之内的虚拟连接AMQP命令都是通过信道发送出去的。不管是发布消息，订阅队列还是接受消息，都是信道，减少TCP的开销，复用一条TCP连接。</p>
+<p><strong>Consumer</strong>:消息的消费者，表示一个从消息队列中取得消息的客户端的 应用程序</p>
+<p><strong>VirtualHost</strong>:小型的rabbitMQ,相互隔离</p>
+<p><strong>Broker</strong>:表示消息队列 服务实体</p>
+<p><img src="/2019/09/11/Spring-Boot-消息中间件/13.RabbitMQ%E7%BB%93%E6%9E%84.png" alt="13.RabbitMQ结构"></p>
+<h4 id="2、RabbitMQ的运行机制"><a href="#2、RabbitMQ的运行机制" class="headerlink" title="2、RabbitMQ的运行机制"></a>2、RabbitMQ的运行机制</h4><p>Exchange的三种方式 </p>
+<p>direct：根据路由键直接匹配，一对一</p>
+<p><img src="/2019/09/11/Spring-Boot-消息中间件/14.RabbitMQDirect.png" alt="14.RabbitMQDirect"></p>
+<p>fanout:不经过路由键，直接发送到每一个队列</p>
+<p><img src="/2019/09/11/Spring-Boot-消息中间件/14.RabbitMQfaout.png" alt="14.RabbitMQfaout"></p>
+<p>topic:类似模糊匹配的根据路由键，来分配绑定的队列</p>
+<p><img src="/2019/09/11/Spring-Boot-消息中间件/14.RabbitMQtopic.png" alt="14.RabbitMQtopic"></p>
+<h4 id="3、RabbitMQ安装测试"><a href="#3、RabbitMQ安装测试" class="headerlink" title="3、RabbitMQ安装测试"></a>3、RabbitMQ安装测试</h4><p>1、打开虚拟机，在docker中安装RabbitMQ</p>
+<figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta">#</span>1.安装rabbitmq，使用镜像加速</span><br><span class="line">docker pull registry.docker-cn.com/library/rabbitmq:3-management</span><br><span class="line">[root@node1 ~]# docker images</span><br><span class="line">REPOSITORY                                     TAG                 IMAGE ID            CREATED             SIZE</span><br><span class="line">registry.docker-cn.com/library/rabbitmq        3-management        c51d1c73d028        11 days ago         149 MB</span><br><span class="line"><span class="meta">#</span>2.运行rabbitmq</span><br><span class="line"><span class="meta">#</span>#### 端口：5672 客户端和rabbitmq通信 15672：管理界面的web页面</span><br><span class="line"></span><br><span class="line">docker run -d -p 5672:5672 -p 15672:15672 --name myrabbitmq c51d1c73d028</span><br><span class="line"></span><br><span class="line"><span class="meta">#</span>3.查看运行</span><br><span class="line">docker ps</span><br></pre></td></tr></table></figure>
+
+<p>2、打开网页客户端并登陆，账号【guest】,密码【guest】，登陆</p>
+<p><img src="/2019/09/11/Spring-Boot-消息中间件/13.rabbitmq.jpg" alt="13.rabbitmq"></p>
+<p>3、添加 【direct】【faout】【topic】的绑定关系等</p>
+<p>1）、添加Exchange,分别添加<strong>exchange.direct</strong>、<strong>exchange.fanout</strong>、<strong>exchange.topic</strong></p>
+<p><img src="/2019/09/11/Spring-Boot-消息中间件/15.exchanges.jpg" alt="15.exchanges"></p>
+<p>2）、添加 Queues,分别添加<strong>lxy.news、wdjr、wdjr.emps、wdjr.news</strong></p>
+<p><img src="/2019/09/11/Spring-Boot-消息中间件/16.queues.jpg" alt="16.queues"></p>
+<p>3）、点击【exchange.direct】添加绑定规则</p>
+<p><img src="/2019/09/11/Spring-Boot-消息中间件/17.bind.jpg" alt="17.bind"></p>
+<p>4）、点击【exchange.fanout】添加绑定规则</p>
+<p><img src="/2019/09/11/Spring-Boot-消息中间件/18,bindfanout.jpg" alt="18,bindfanout"></p>
+<p>5）、点击【exchange.topic】添加绑定规则</p>
+<p><img src="/2019/09/11/Spring-Boot-消息中间件/19,bind_topic.jpg" alt="19,bind_topic"></p>
+<blockquote>
+<p>/*: 代表匹配1个单词</p>
+<p>/#：代表匹配0个或者多个单词</p>
+</blockquote>
+<p>4、发布信息测试</p>
+<p>【direct】发布命令，点击 Publish message</p>
+<p><img src="/2019/09/11/Spring-Boot-消息中间件/20.publish-direct.jpg" alt="20.publish-direct"></p>
+<p>查看队列的数量</p>
+<p><img src="/2019/09/11/Spring-Boot-消息中间件/21.queue-direct.jpg" alt="21.queue-direct"></p>
+<p>点击查看发送的信息</p>
+<p><img src="/2019/09/11/Spring-Boot-消息中间件/22.msg-direct.jpg" alt="22.msg-direct"></p>
+<p>【fanout】的发布消息</p>
+<p><img src="/2019/09/11/Spring-Boot-消息中间件/23.pub-fanout.jpg" alt="23.pub-fanout"></p>
+<p>队列信息</p>
+<p><img src="/2019/09/11/Spring-Boot-消息中间件/24.queue-fanout.jpg" alt="24.queue-fanout"></p>
+<p>随意一个数据信息例如：wdjr.emp</p>
+<p><img src="/2019/09/11/Spring-Boot-消息中间件/25.msg-fanout.jpg" alt="25.msg-fanout"></p>
+<p>【topic】发布信息测试</p>
+<p><img src="/2019/09/11/Spring-Boot-消息中间件/26.pub-topic.jpg" alt="26.pub-topic"></p>
+<p>队列的值</p>
+<p><img src="/2019/09/11/Spring-Boot-消息中间件/27.que-topic.jpg" alt="27.que-topic"></p>
+<p>信息查看</p>
+<p><img src="/2019/09/11/Spring-Boot-消息中间件/28.msg-topic.jpg" alt="28.msg-topic"></p>
+<h4 id="4、创建工程整合"><a href="#4、创建工程整合" class="headerlink" title="4、创建工程整合"></a>4、创建工程整合</h4><figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><span class="line"><span class="number">1</span>、RabbitAutoConfiguration</span><br><span class="line"><span class="number">2</span>、自动配置了连接工厂 ConnectionFactory</span><br><span class="line"><span class="number">3</span>、RabbitProperties封装了 RabbitMQ</span><br><span class="line"><span class="number">4</span>、RabbitTemplate:给RabbitMQ发送和接受消息的</span><br><span class="line"><span class="number">5</span>、AmqpAdmin：RabbitMQ的系统管理功能组件</span><br></pre></td></tr></table></figure>
+
+<h5 id="1、RabbitTemplate"><a href="#1、RabbitTemplate" class="headerlink" title="1、RabbitTemplate"></a>1、RabbitTemplate</h5><p>1、新建SpringBoot工程，SpringBoot1.5+Integeration/RabbitMQ+Web</p>
+<p>2、RabbitAutoConfiguration文件</p>
+<p>3、编写配置文件application.yml</p>
+<figure class="highlight yaml"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br></pre></td><td class="code"><pre><span class="line"><span class="attr">spring:</span></span><br><span class="line"><span class="attr">  rabbitmq:</span></span><br><span class="line"><span class="attr">    host:</span> <span class="number">192.168</span><span class="number">.179</span><span class="number">.131</span></span><br><span class="line"><span class="attr">    port:</span> <span class="number">5672</span></span><br><span class="line"><span class="attr">    username:</span> <span class="string">guest</span></span><br><span class="line"><span class="attr">    password:</span> <span class="string">guest</span></span><br></pre></td></tr></table></figure>
+
+<p>4、编写测试类,将HashMap写入Queue</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta">@Autowired</span></span><br><span class="line">   RabbitTemplate rabbitTemplate;</span><br><span class="line"></span><br><span class="line">   <span class="meta">@Test</span></span><br><span class="line">   <span class="function"><span class="keyword">public</span> <span class="keyword">void</span> <span class="title">contextLoads</span><span class="params">()</span> </span>&#123;</span><br><span class="line">       <span class="comment">//Message需要自己构建一个；定义消息体内容和消息头</span></span><br><span class="line">       <span class="comment">// rabbitTemplate.send(exchange, routingKey, message);</span></span><br><span class="line">       <span class="comment">//Object 默认当成消息体，只需要传入要发送的对象，自动化序列发送给rabbitmq；</span></span><br><span class="line">       Map&lt;String,Object&gt; map = <span class="keyword">new</span> HashMap&lt;&gt;();</span><br><span class="line">       map.put(<span class="string">"msg"</span>, <span class="string">"这是第一个信息"</span>);</span><br><span class="line">       map.put(<span class="string">"data"</span>, Arrays.asList(<span class="string">"helloWorld"</span>,<span class="number">123</span>,<span class="keyword">true</span>));</span><br><span class="line">       <span class="comment">//对象被默认序列以后发送出去</span></span><br><span class="line">       rabbitTemplate.convertAndSend(<span class="string">"exchange.direct"</span>,<span class="string">"wdjr.news"</span>,map);</span><br><span class="line">   &#125;</span><br></pre></td></tr></table></figure>
+
+<p>5、查看网页的信息</p>
+<p><img src="/2019/09/11/Spring-Boot-消息中间件/29.dir-idea.jpg" alt="29.dir-idea"></p>
+<p>6、取出队列的值</p>
+<blockquote>
+<p>取出队列中数据就没了</p>
+</blockquote>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta">@Test</span></span><br><span class="line"><span class="function"><span class="keyword">public</span> <span class="keyword">void</span> <span class="title">reciverAndConvert</span><span class="params">()</span></span>&#123;</span><br><span class="line"></span><br><span class="line">    Object o = rabbitTemplate.receiveAndConvert(<span class="string">"wdjr.news"</span>);</span><br><span class="line">    System.out.println(o.getClass());</span><br><span class="line">    System.out.println(o);</span><br><span class="line"></span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>结果</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">class java.util.HashMap</span><br><span class="line">&#123;msg=这是第一个信息, data=[helloWorld, 123, true]&#125;</span><br></pre></td></tr></table></figure>
+
+<p>7、使用Json方式传递，并传入对象Book</p>
+<p>1）、MyAMQPConfig</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta">@Configuration</span></span><br><span class="line"><span class="keyword">public</span> <span class="class"><span class="keyword">class</span> <span class="title">MyAMQPConfig</span>  </span>&#123;</span><br><span class="line"></span><br><span class="line">    <span class="meta">@Bean</span></span><br><span class="line">    <span class="function"><span class="keyword">public</span> MessageConverter <span class="title">messageConverter</span><span class="params">()</span></span>&#123;</span><br><span class="line">        <span class="keyword">return</span> <span class="keyword">new</span> Jackson2JsonMessageConverter();</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>2）、编写Book实体类</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">package</span> com.wdjr.amqp.bean;</span><br><span class="line"></span><br><span class="line"><span class="keyword">public</span> <span class="class"><span class="keyword">class</span> <span class="title">Book</span> </span>&#123;</span><br><span class="line">    <span class="keyword">private</span> String  bookName;</span><br><span class="line">    <span class="keyword">private</span> String author;</span><br><span class="line"></span><br><span class="line">    <span class="function"><span class="keyword">public</span> <span class="title">Book</span><span class="params">()</span></span>&#123;</span><br><span class="line"></span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    <span class="function"><span class="keyword">public</span> <span class="title">Book</span><span class="params">(String bookName, String author)</span> </span>&#123;</span><br><span class="line">        <span class="keyword">this</span>.bookName = bookName;</span><br><span class="line">        <span class="keyword">this</span>.author = author;</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    <span class="function"><span class="keyword">public</span> String <span class="title">getBookName</span><span class="params">()</span> </span>&#123;</span><br><span class="line">        <span class="keyword">return</span> bookName;</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    <span class="function"><span class="keyword">public</span> <span class="keyword">void</span> <span class="title">setBookName</span><span class="params">(String bookName)</span> </span>&#123;</span><br><span class="line">        <span class="keyword">this</span>.bookName = bookName;</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    <span class="function"><span class="keyword">public</span> String <span class="title">getAuthor</span><span class="params">()</span> </span>&#123;</span><br><span class="line">        <span class="keyword">return</span> author;</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    <span class="function"><span class="keyword">public</span> <span class="keyword">void</span> <span class="title">setAuthor</span><span class="params">(String author)</span> </span>&#123;</span><br><span class="line">        <span class="keyword">this</span>.author = author;</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    <span class="meta">@Override</span></span><br><span class="line">    <span class="function"><span class="keyword">public</span> String <span class="title">toString</span><span class="params">()</span> </span>&#123;</span><br><span class="line">        <span class="keyword">return</span> <span class="string">"Book&#123;"</span> +</span><br><span class="line">                <span class="string">"bookName='"</span> + bookName + <span class="string">'\''</span> +</span><br><span class="line">                <span class="string">", author='"</span> + author + <span class="string">'\''</span> +</span><br><span class="line">                <span class="string">'&#125;'</span>;</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>3）、测试类</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta">@Test</span></span><br><span class="line"><span class="function"><span class="keyword">public</span> <span class="keyword">void</span> <span class="title">contextLoads</span><span class="params">()</span> </span>&#123;</span><br><span class="line">    <span class="comment">//对象被默认序列以后发送出去</span></span><br><span class="line">    rabbitTemplate.convertAndSend(<span class="string">"exchange.direct"</span>,<span class="string">"wdjr.news"</span>,<span class="keyword">new</span> Book(<span class="string">"百年孤独"</span>, <span class="string">"季羡林"</span>));</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>4）、查看wdjr.news</p>
+<p><img src="/2019/09/11/Spring-Boot-消息中间件/30.dir-idea-json.jpg" alt="30.dir-idea-json"></p>
+<p>5）、取出数据</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta">@Test</span></span><br><span class="line"><span class="function"><span class="keyword">public</span> <span class="keyword">void</span> <span class="title">reciverAndConvert</span><span class="params">()</span></span>&#123;</span><br><span class="line">    Object o = rabbitTemplate.receiveAndConvert(<span class="string">"wdjr.news"</span>);</span><br><span class="line">    System.out.println(o.getClass());</span><br><span class="line">    System.out.println(o);</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>6）、结果演示</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">class com.wdjr.amqp.bean.Book</span><br><span class="line">Book&#123;bookName=&apos;百年孤独&apos;, author=&apos;季羡林&apos;&#125;</span><br></pre></td></tr></table></figure>
+
+<h5 id="2、开启基于注解的方式"><a href="#2、开启基于注解的方式" class="headerlink" title="2、开启基于注解的方式"></a>2、开启基于注解的方式</h5><p>1、新建一个BookService</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta">@Service</span></span><br><span class="line"><span class="keyword">public</span> <span class="class"><span class="keyword">class</span> <span class="title">BookService</span> </span>&#123;</span><br><span class="line">    <span class="meta">@RabbitListener</span>(queues = <span class="string">"wdjr.news"</span>)</span><br><span class="line">    <span class="function"><span class="keyword">public</span> <span class="keyword">void</span> <span class="title">receive</span><span class="params">(Book book)</span></span>&#123;</span><br><span class="line">        System.out.println(book);</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    <span class="meta">@RabbitListener</span>(queues = <span class="string">"wdjr"</span>)</span><br><span class="line">    <span class="function"><span class="keyword">public</span> <span class="keyword">void</span> <span class="title">receive02</span><span class="params">(Message message)</span></span>&#123;</span><br><span class="line">        System.out.println(message.getBody());</span><br><span class="line">        System.out.println(message.getMessageProperties());</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>2、主程序开启RabbitMQ的注解</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta">@EnableRabbit</span> <span class="comment">//开启基于注解的rabbitmq</span></span><br><span class="line"><span class="meta">@SpringBootApplication</span></span><br><span class="line"><span class="keyword">public</span> <span class="class"><span class="keyword">class</span> <span class="title">AmqpApplication</span> </span>&#123;</span><br><span class="line"></span><br><span class="line">    <span class="function"><span class="keyword">public</span> <span class="keyword">static</span> <span class="keyword">void</span> <span class="title">main</span><span class="params">(String[] args)</span> </span>&#123;</span><br><span class="line">        SpringApplication.run(AmqpApplication.class, args);</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<h5 id="3、AmqpAdmin"><a href="#3、AmqpAdmin" class="headerlink" title="3、AmqpAdmin"></a>3、AmqpAdmin</h5><blockquote>
+<p>创建和删除 Exchange 、Queue、Bind</p>
+</blockquote>
+<p>1）、创建Exchange</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta">@Test</span></span><br><span class="line"><span class="function"><span class="keyword">public</span> <span class="keyword">void</span> <span class="title">createExchange</span><span class="params">()</span></span>&#123;</span><br><span class="line">    amqpAdmin.declareExchange(<span class="keyword">new</span> DirectExchange(<span class="string">"amqpadmin.direct"</span>));</span><br><span class="line">    System.out.println(<span class="string">"Create Finish"</span>);</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>效果演示</p>
+<p><img src="/2019/09/11/Spring-Boot-消息中间件/31.createAMQP.jpg" alt="31.createAMQP"></p>
+<p>2）、创建Queue</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta">@Test</span></span><br><span class="line"><span class="function"><span class="keyword">public</span> <span class="keyword">void</span> <span class="title">createQueue</span><span class="params">()</span></span>&#123;</span><br><span class="line">    amqpAdmin.declareQueue(<span class="keyword">new</span> Queue(<span class="string">"amqpadmin.queue"</span>,<span class="keyword">true</span>));</span><br><span class="line">    System.out.println(<span class="string">"Create Queue Finish"</span>);</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p><img src="/2019/09/11/Spring-Boot-消息中间件/32.createQueue.jpg" alt="32.createQueue"></p>
+<p>3）、创建Bind规则</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta">@Test</span></span><br><span class="line"><span class="function"><span class="keyword">public</span> <span class="keyword">void</span> <span class="title">createBind</span><span class="params">()</span></span>&#123;</span><br><span class="line">    amqpAdmin.declareBinding(<span class="keyword">new</span> Binding(<span class="string">"amqpadmin.queue"</span>,Binding.DestinationType.QUEUE , <span class="string">"amqpadmin.direct"</span>, <span class="string">"amqp.haha"</span>, <span class="keyword">null</span>));</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p><img src="/2019/09/11/Spring-Boot-消息中间件/33.createBinding.jpg" alt="33.createBinding"></p>
+<p>删除类似</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta">@Test</span></span><br><span class="line"><span class="function"><span class="keyword">public</span> <span class="keyword">void</span> <span class="title">deleteExchange</span><span class="params">()</span></span>&#123;</span><br><span class="line">    amqpAdmin.deleteExchange(<span class="string">"amqpadmin.direct"</span>);</span><br><span class="line">    System.out.println(<span class="string">"delete Finish"</span>);</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>## </p>
+</div><div class="tags"><a href="/tags/Spring-Boot/">Spring Boot</a><a href="/tags/消息队列/">消息队列</a><a href="/tags/RabbitMQ/">RabbitMQ</a></div><div class="post-nav"><a class="pre" href="/2019/09/11/Spring-Boot-检索/">Spring Boot 检索</a><a class="next" href="/2019/09/11/Spring-Boot-缓存/">Spring Boot 缓存</a></div></div></div></div><div class="pure-u-1-4 hidden_mid_and_down"><div id="sidebar"><div class="widget"><input class="st-default-search-input" placeholder="Search" type="text"></div><div class="widget"><div class="widget-title"><i class="fa fa-folder-o"> 分类</i></div><ul class="category-list"><li class="category-list-item"><a class="category-list-link" href="/categories/Redis/">Redis</a><span class="category-list-count">7</span></li><li class="category-list-item"><a class="category-list-link" href="/categories/Spring-Boot初级/">Spring Boot初级</a><span class="category-list-count">8</span></li><li class="category-list-item"><a class="category-list-link" href="/categories/Spring-Boot高级/">Spring Boot高级</a><span class="category-list-count">4</span></li><li class="category-list-item"><a class="category-list-link" href="/categories/categories/">categories</a><span class="category-list-count">1</span></li></ul></div><div class="widget"><div class="widget-title"><i class="fa fa-star-o"> 标签</i></div><div class="tagcloud"><a href="/tags/面试题/" style="font-size: 15px;">面试题</a> <a href="/tags/Hexo/" style="font-size: 15px;">Hexo</a> <a href="/tags/Spring-Boot/" style="font-size: 15px;">Spring Boot</a> <a href="/tags/异步/" style="font-size: 15px;">异步</a> <a href="/tags/邮件/" style="font-size: 15px;">邮件</a> <a href="/tags/spring/" style="font-size: 15px;">spring</a> <a href="/tags/Redis/" style="font-size: 15px;">Redis</a> <a href="/tags/缓存/" style="font-size: 15px;">缓存</a> <a href="/tags/消息队列/" style="font-size: 15px;">消息队列</a> <a href="/tags/RabbitMQ/" style="font-size: 15px;">RabbitMQ</a> <a href="/tags/搜索引擎/" style="font-size: 15px;">搜索引擎</a> <a href="/tags/ElasticSearch/" style="font-size: 15px;">ElasticSearch</a></div></div><div class="widget"><div class="widget-title"><i class="fa fa-file-o"> 最近文章</i></div><ul class="post-list"><li class="post-list-item"><a class="post-list-link" href="/2019/09/11/Spring-Boot-任务/">Spring Boot 任务</a></li><li class="post-list-item"><a class="post-list-link" href="/2019/09/11/Spring-Boot-检索/">Spring Boot 检索</a></li><li class="post-list-item"><a class="post-list-link" href="/2019/09/11/Spring-Boot-消息中间件/">Spring Boot 消息中间件</a></li><li class="post-list-item"><a class="post-list-link" href="/2019/09/11/Spring-Boot-缓存/">Spring Boot 缓存</a></li><li class="post-list-item"><a class="post-list-link" href="/2018/06/21/Spring-Boot-自定义starter/">Spring Boot 自定义starter</a></li><li class="post-list-item"><a class="post-list-link" href="/2018/06/19/Spring-Boot-启动配置原理/">Spring Boot 启动配置原理</a></li><li class="post-list-item"><a class="post-list-link" href="/2018/06/17/Spring-Boot-数据访问/">Spring Boot 数据访问</a></li><li class="post-list-item"><a class="post-list-link" href="/2018/06/15/Spring-Boot-Docker/">Spring Boot Docker</a></li><li class="post-list-item"><a class="post-list-link" href="/2018/06/12/Spring-Boot-Web开发/">Spring Boot Web开发</a></li><li class="post-list-item"><a class="post-list-link" href="/2018/06/11/Spring-Boot-日志相关/">Spring Boot 日志相关</a></li></ul></div><div class="widget"><div class="widget-title"><i class="fa fa-external-link"> 友情链接</i></div><ul></ul><a href="http://www.example1.com/" title="site-name1" target="_blank">site-name1</a><ul></ul><a href="http://www.example2.com/" title="site-name2" target="_blank">site-name2</a><ul></ul><a href="http://www.example3.com/" title="site-name3" target="_blank">site-name3</a></div></div></div><div class="pure-u-1 pure-u-md-3-4"><div id="footer">Copyright © 2019 <a href="/." rel="nofollow">Vic.</a> Powered by<a rel="nofollow" target="_blank" href="https://hexo.io"> Hexo.</a><a rel="nofollow" target="_blank" href="https://github.com/tufu9441/maupassant-hexo"> Theme</a> by<a rel="nofollow" target="_blank" href="https://github.com/pagecho"> Cho.</a></div></div></div><a class="show" id="rocket" href="#top"></a><script type="text/javascript" src="/js/totop.js?v=0.0.0" async></script><script type="text/javascript" src="//lib.baomitu.com/fancybox/3.5.7/jquery.fancybox.min.js" async></script><script type="text/javascript" src="/js/fancybox.js?v=0.0.0" async></script><link rel="stylesheet" type="text/css" href="//lib.baomitu.com/fancybox/3.5.7/jquery.fancybox.min.css"><script>(function(w,d,t,u,n,s,e){w['SwiftypeObject']=n;w[n]=w[n]||function(){
+(w[n].q=w[n].q||[]).push(arguments);};s=d.createElement(t);
+e=d.getElementsByTagName(t)[0];s.async=1;s.src=u;e.parentNode.insertBefore(s,e);
+})(window,document,'script','//s.swiftypecdn.com/install/v2/st.js','_st');
+_st('install','s6HJQA19KFcyj1yfa9Lr','2.0.0');
+</script><script type="text/javascript" src="/js/codeblock-resizer.js?v=0.0.0"></script><script type="text/javascript" src="/js/smartresize.js?v=0.0.0"></script></div></body></html>
