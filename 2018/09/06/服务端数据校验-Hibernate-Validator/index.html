@@ -1,0 +1,120 @@
+<!DOCTYPE html><html lang="zh-CN"><head><meta name="generator" content="Hexo 3.9.0"><meta http-equiv="content-type" content="text/html; charset=utf-8"><meta content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=0" name="viewport"><meta content="yes" name="apple-mobile-web-app-capable"><meta content="black-translucent" name="apple-mobile-web-app-status-bar-style"><meta content="telephone=no" name="format-detection"><meta name="description"><title>服务端数据校验 Hibernate Validator | Vic</title><link rel="stylesheet" type="text/css" href="/css/style.css?v=0.0.0"><link rel="stylesheet" type="text/css" href="//lib.baomitu.com/normalize/8.0.1/normalize.min.css"><link rel="stylesheet" type="text/css" href="//lib.baomitu.com/pure/1.0.0/pure-min.css"><link rel="stylesheet" type="text/css" href="//lib.baomitu.com/pure/1.0.0/grids-responsive-min.css"><link rel="stylesheet" href="//lib.baomitu.com/font-awesome/4.7.0/css/font-awesome.min.css"><script type="text/javascript" src="//lib.baomitu.com/jquery/3.4.0/jquery.min.js"></script><link rel="icon" mask sizes="any" href="/favicon.ico"><link rel="Shortcut Icon" type="image/x-icon" href="/favicon.ico"><link rel="apple-touch-icon" href="/apple-touch-icon.png"><link rel="apple-touch-icon-precomposed" href="/apple-touch-icon.png"></head><body><div class="body_container"><div id="header"><div class="site-name"><h1 class="hidden">服务端数据校验 Hibernate Validator</h1><a id="logo" href="/.">Vic</a><p class="description">Simon,I just don't know</p></div><div id="nav-menu"><a class="current" href="/."><i class="fa fa-home"> 首页</i></a><a href="/archives/"><i class="fa fa-archive"> 归档</i></a><a href="/about/"><i class="fa fa-user"> 关于</i></a><a href="/atom.xml"><i class="fa fa-rss"> 订阅</i></a></div></div><div class="pure-g" id="layout"><div class="pure-u-1 pure-u-md-3-4"><div class="content_container"><div class="post"><h1 class="post-title">服务端数据校验 Hibernate Validator</h1><div class="post-meta">Sep 6, 2018<script src="https://busuanzi.ibruce.info/busuanzi/2.3/busuanzi.pure.mini.js" async></script><span id="busuanzi_container_page_pv"> | <span id="busuanzi_value_page_pv"></span><span> 阅读</span></span></div><div class="post-content"><h3 id="前言"><a href="#前言" class="headerlink" title="前言"></a>前言</h3><p>一些比较重要的数据在操作到数据库时，都需要数据校验对数据进行校验，但传统的数据校验都较为复杂且枯燥，而且前端的校验是很容易被有心人绕过的，所以我们必须在后台添加数据校验功能，最近发现了一种服务端较为简便的数据校验方法Hibernate-Validator。</p>
+<p>在SpringBoot的web启动器中已经集成了相关依赖：</p>
+<p> <img src="/2018/09/06/服务端数据校验-Hibernate-Validator/1527244265451.png" alt="1527244265451"></p>
+<h3 id="1-什么是Hibernate-Validator"><a href="#1-什么是Hibernate-Validator" class="headerlink" title="1.什么是Hibernate Validator"></a>1.什么是Hibernate Validator</h3><p>Hibernate Validator是Hibernate提供的一个开源框架，使用注解方式非常方便的实现服务端的数据校验。</p>
+<p>官网：<a href="http://hibernate.org/validator/" target="_blank" rel="noopener">http://hibernate.org/validator/</a></p>
+<p><img src="/2018/09/06/服务端数据校验-Hibernate-Validator/1527244393041.png" alt="1527244393041"></p>
+<p><strong>hibernate Validator</strong> 是 Bean Validation 的参考实现 。</p>
+<p>Hibernate Validator 提供了 JSR 303 规范中所有内置 constraint（约束） 的实现，除此之外还有一些附加的 constraint。</p>
+<p>在日常开发中，Hibernate Validator经常用来验证bean的字段，基于注解，方便快捷高效。</p>
+<h3 id="2-Bean校验的注解"><a href="#2-Bean校验的注解" class="headerlink" title="2.Bean校验的注解"></a>2.Bean校验的注解</h3><p>常用注解如下：</p>
+<table>
+<thead>
+<tr>
+<th><strong>Constraint</strong></th>
+<th><strong>详细信息</strong></th>
+</tr>
+</thead>
+<tbody><tr>
+<td><strong>@Valid</strong></td>
+<td>被注释的元素是一个对象，需要检查此对象的所有字段值</td>
+</tr>
+<tr>
+<td><strong>@Null</strong></td>
+<td>被注释的元素必须为 null</td>
+</tr>
+<tr>
+<td><strong>@NotNull</strong></td>
+<td>被注释的元素必须不为 null</td>
+</tr>
+<tr>
+<td><strong>@AssertTrue</strong></td>
+<td>被注释的元素必须为 true</td>
+</tr>
+<tr>
+<td><strong>@AssertFalse</strong></td>
+<td>被注释的元素必须为 false</td>
+</tr>
+<tr>
+<td><strong>@Min(value)</strong></td>
+<td>被注释的元素必须是一个数字，其值必须大于等于指定的最小值</td>
+</tr>
+<tr>
+<td><strong>@Max(value)</strong></td>
+<td>被注释的元素必须是一个数字，其值必须小于等于指定的最大值</td>
+</tr>
+<tr>
+<td><strong>@DecimalMin(value)</strong></td>
+<td>被注释的元素必须是一个数字，其值必须大于等于指定的最小值</td>
+</tr>
+<tr>
+<td><strong>@DecimalMax(value)</strong></td>
+<td>被注释的元素必须是一个数字，其值必须小于等于指定的最大值</td>
+</tr>
+<tr>
+<td><strong>@Size(max,   min)</strong></td>
+<td>被注释的元素的大小必须在指定的范围内</td>
+</tr>
+<tr>
+<td><strong>@Digits   (integer, fraction)</strong></td>
+<td>被注释的元素必须是一个数字，其值必须在可接受的范围内</td>
+</tr>
+<tr>
+<td><strong>@Past</strong></td>
+<td>被注释的元素必须是一个过去的日期</td>
+</tr>
+<tr>
+<td><strong>@Future</strong></td>
+<td>被注释的元素必须是一个将来的日期</td>
+</tr>
+<tr>
+<td><strong>@Pattern(value)</strong></td>
+<td>被注释的元素必须符合指定的正则表达式</td>
+</tr>
+<tr>
+<td><strong>@Email</strong></td>
+<td>被注释的元素必须是电子邮箱地址</td>
+</tr>
+<tr>
+<td><strong>@Length</strong></td>
+<td>被注释的字符串的大小必须在指定的范围内</td>
+</tr>
+<tr>
+<td><strong>@NotEmpty</strong></td>
+<td>被注释的字符串的必须非空</td>
+</tr>
+<tr>
+<td><strong>@Range</strong></td>
+<td>被注释的元素必须在合适的范围内</td>
+</tr>
+<tr>
+<td><strong>@NotBlank</strong></td>
+<td>被注释的字符串的必须非空</td>
+</tr>
+<tr>
+<td><strong>@URL(protocol=,host=,   port=,regexp=, flags=)</strong></td>
+<td>被注释的字符串必须是一个有效的url</td>
+</tr>
+<tr>
+<td><strong>@CreditCardNumber</strong></td>
+<td>被注释的字符串必须通过Luhn校验算法，银行卡，信用卡等号码一般都用Luhn计算合法性</td>
+</tr>
+</tbody></table>
+<h3 id="3-给User添加校验"><a href="#3-给User添加校验" class="headerlink" title="3.给User添加校验"></a>3.给User添加校验</h3><p>在<code>pom.xml</code>中添加Hibernate-Validator依赖：</p>
+<figure class="highlight xml"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line"><span class="tag">&lt;<span class="name">dependency</span>&gt;</span></span><br><span class="line">    <span class="tag">&lt;<span class="name">groupId</span>&gt;</span>org.hibernate.validator<span class="tag">&lt;/<span class="name">groupId</span>&gt;</span></span><br><span class="line">    <span class="tag">&lt;<span class="name">artifactId</span>&gt;</span>hibernate-validator<span class="tag">&lt;/<span class="name">artifactId</span>&gt;</span></span><br><span class="line"><span class="tag">&lt;/<span class="name">dependency</span>&gt;</span></span><br></pre></td></tr></table></figure>
+
+<p>在User对象的部分属性上添加注解：</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta">@Table</span>(name = <span class="string">"tb_user"</span>)</span><br><span class="line"><span class="keyword">public</span> <span class="class"><span class="keyword">class</span> <span class="title">User</span> </span>&#123;</span><br><span class="line">    <span class="meta">@Id</span></span><br><span class="line">    <span class="meta">@GeneratedValue</span>(strategy = GenerationType.IDENTITY)</span><br><span class="line">    <span class="keyword">private</span> Long id;</span><br><span class="line">    <span class="meta">@Length</span>(min = <span class="number">4</span>, max = <span class="number">30</span>, message = <span class="string">"用户名只能在4~30位之间"</span>)</span><br><span class="line">    <span class="keyword">private</span> String username;<span class="comment">// 用户名</span></span><br><span class="line"></span><br><span class="line">    <span class="meta">@JsonIgnore</span></span><br><span class="line">    <span class="meta">@Length</span>(min = <span class="number">4</span>, max = <span class="number">30</span>, message = <span class="string">"用户名只能在4~30位之间"</span>)</span><br><span class="line">    <span class="keyword">private</span> String password;<span class="comment">// 密码</span></span><br><span class="line"></span><br><span class="line">    <span class="meta">@Pattern</span>(regexp = <span class="string">"^1[35678]\\d&#123;9&#125;$"</span>, message = <span class="string">"手机号格式不正确"</span>)</span><br><span class="line">    <span class="keyword">private</span> String phone;<span class="comment">// 电话</span></span><br><span class="line"></span><br><span class="line">    <span class="keyword">private</span> Date created;<span class="comment">// 创建时间</span></span><br><span class="line"></span><br><span class="line">    <span class="meta">@JsonIgnore</span></span><br><span class="line">    <span class="keyword">private</span> String salt;<span class="comment">// 密码的盐值</span></span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<h3 id="4-在controller上进行控制"><a href="#4-在controller上进行控制" class="headerlink" title="4.在controller上进行控制"></a>4.在controller上进行控制</h3><p>在controller中只需要给User添加 @Valid注解即可。</p>
+<p> <img src="/2018/09/06/服务端数据校验-Hibernate-Validator/1527247334410.png" alt="1527247334410"></p>
+<h3 id="5-测试"><a href="#5-测试" class="headerlink" title="5.测试"></a>5.测试</h3><p>故意填错：</p>
+<p><img src="/2018/09/06/服务端数据校验-Hibernate-Validator/1527247422251.png" alt="1527247422251"></p>
+<p>然后SpringMVC会自动返回错误信息：</p>
+<p> <img src="/2018/09/06/服务端数据校验-Hibernate-Validator/1527247492172.png" alt="1527247492172"></p>
+</div><iframe src="/donate/?AliPayQR=/img/AliPayQR.jpg&amp;WeChatQR=/img/WeChatQR.jpg&amp;GitHub=null&amp;BTCQR=null&amp;BTCKEY=null&amp;PayPal=null" style="overflow-x:hidden; overflow-y:hidden; border:0xp none #fff; min-height:240px; width:100%;" frameborder="0" scrolling="no"></iframe><div class="tags"><a href="/tags/数据校验/">数据校验</a><a href="/tags/Hibernate-Validator/">Hibernate Validator</a></div><div class="post-nav"><a class="pre" href="/2018/09/19/JWT-RSA实现无状态登录/">JWT+RSA实现无状态登录</a><a class="next" href="/2018/09/01/跨域问题和解决方案/">跨域问题和解决方案</a></div></div></div></div><div class="pure-u-1-4 hidden_mid_and_down"><div id="sidebar"><div class="widget"><input class="st-default-search-input" placeholder="Search" type="text"></div><div class="widget"><div class="widget-title"><i class="fa fa-folder-o"> 分类</i></div><ul class="category-list"><li class="category-list-item"><a class="category-list-link" href="/categories/Java高级/">Java高级</a><span class="category-list-count">1</span></li><li class="category-list-item"><a class="category-list-link" href="/categories/Redis/">Redis</a><span class="category-list-count">7</span></li><li class="category-list-item"><a class="category-list-link" href="/categories/Spring/">Spring</a><span class="category-list-count">1</span></li><li class="category-list-item"><a class="category-list-link" href="/categories/Spring-Boot初级/">Spring Boot初级</a><span class="category-list-count">8</span></li><li class="category-list-item"><a class="category-list-link" href="/categories/Spring-Boot高级/">Spring Boot高级</a><span class="category-list-count">8</span></li></ul></div><div class="widget"><div class="widget-title"><i class="fa fa-star-o"> 标签</i></div><div class="tagcloud"><a href="/tags/ElasticSearch/" style="font-size: 15px;">ElasticSearch</a> <a href="/tags/Hexo/" style="font-size: 15px;">Hexo</a> <a href="/tags/JWT/" style="font-size: 15px;">JWT</a> <a href="/tags/RSA/" style="font-size: 15px;">RSA</a> <a href="/tags/非对称加密/" style="font-size: 15px;">非对称加密</a> <a href="/tags/Redis/" style="font-size: 15px;">Redis</a> <a href="/tags/Spring-Boot/" style="font-size: 15px;">Spring Boot</a> <a href="/tags/异步/" style="font-size: 15px;">异步</a> <a href="/tags/邮件/" style="font-size: 15px;">邮件</a> <a href="/tags/Dubbo/" style="font-size: 15px;">Dubbo</a> <a href="/tags/Zookeeper/" style="font-size: 15px;">Zookeeper</a> <a href="/tags/Eureka/" style="font-size: 15px;">Eureka</a> <a href="/tags/Spring-Cloud/" style="font-size: 15px;">Spring Cloud</a> <a href="/tags/安全/" style="font-size: 15px;">安全</a> <a href="/tags/Spring-Security/" style="font-size: 15px;">Spring Security</a> <a href="/tags/搜索引擎/" style="font-size: 15px;">搜索引擎</a> <a href="/tags/无状态登录/" style="font-size: 15px;">无状态登录</a> <a href="/tags/消息队列/" style="font-size: 15px;">消息队列</a> <a href="/tags/RabbitMQ/" style="font-size: 15px;">RabbitMQ</a> <a href="/tags/热部署/" style="font-size: 15px;">热部署</a> <a href="/tags/监管/" style="font-size: 15px;">监管</a> <a href="/tags/缓存/" style="font-size: 15px;">缓存</a> <a href="/tags/Spring/" style="font-size: 15px;">Spring</a> <a href="/tags/面试题/" style="font-size: 15px;">面试题</a> <a href="/tags/数据校验/" style="font-size: 15px;">数据校验</a> <a href="/tags/Hibernate-Validator/" style="font-size: 15px;">Hibernate Validator</a> <a href="/tags/跨域问题/" style="font-size: 15px;">跨域问题</a> <a href="/tags/多线程/" style="font-size: 15px;">多线程</a> <a href="/tags/锁/" style="font-size: 15px;">锁</a> <a href="/tags/Elasticsearch/" style="font-size: 15px;">Elasticsearch</a> <a href="/tags/Kibana/" style="font-size: 15px;">Kibana</a> <a href="/tags/ik分词器/" style="font-size: 15px;">ik分词器</a></div></div><div class="widget"><div class="widget-title"><i class="fa fa-file-o"> 最近文章</i></div><ul class="post-list"><li class="post-list-item"><a class="post-list-link" href="/2019/09/17/java-多线程/">java 多线程</a></li><li class="post-list-item"><a class="post-list-link" href="/2018/09/27/Elasticsearch入门姿势/">Elasticsearch入门姿势</a></li><li class="post-list-item"><a class="post-list-link" href="/2018/09/19/JWT-RSA实现无状态登录/">JWT+RSA实现无状态登录</a></li><li class="post-list-item"><a class="post-list-link" href="/2018/09/06/服务端数据校验-Hibernate-Validator/">服务端数据校验 Hibernate Validator</a></li><li class="post-list-item"><a class="post-list-link" href="/2018/09/01/跨域问题和解决方案/">跨域问题和解决方案</a></li><li class="post-list-item"><a class="post-list-link" href="/2018/08/06/Spring-Boot-监管/">Spring Boot  监管</a></li><li class="post-list-item"><a class="post-list-link" href="/2018/08/04/Spring-Boot-热部署/">Spring Boot 热部署</a></li><li class="post-list-item"><a class="post-list-link" href="/2018/08/02/Spring-Boot-分布式/">Spring Boot 分布式</a></li><li class="post-list-item"><a class="post-list-link" href="/2018/07/12/Spring-Boot-安全/">Spring Boot 安全</a></li><li class="post-list-item"><a class="post-list-link" href="/2018/07/12/Spring-Boot-任务/">Spring Boot 任务</a></li></ul></div><div class="widget"><div class="widget-title"><i class="fa fa-external-link"> 友情链接</i></div><ul></ul><a href="http://www.feeye.com/" title="飞耶软件" target="_blank">飞耶软件</a><ul></ul><a href="https://www.zhongmin.cn" title="中民保险网" target="_blank">中民保险网</a><ul></ul><a href="https://www.lingju.ai/index" title="灵聚智能" target="_blank">灵聚智能</a></div></div></div><div class="pure-u-1 pure-u-md-3-4"><div id="footer">Copyright © 2019 <a href="/." rel="nofollow">Vic.</a> Powered by<a rel="nofollow" target="_blank" href="https://hexo.io"> Hexo.</a><a rel="nofollow" target="_blank" href="https://github.com/tufu9441/maupassant-hexo"> Theme</a> by<a rel="nofollow" target="_blank" href="https://github.com/pagecho"> Cho.</a></div></div></div><a class="show" id="rocket" href="#top"></a><script type="text/javascript" src="/js/totop.js?v=0.0.0" async></script><script type="text/javascript" src="//lib.baomitu.com/fancybox/3.5.7/jquery.fancybox.min.js" async></script><script type="text/javascript" src="/js/fancybox.js?v=0.0.0" async></script><link rel="stylesheet" type="text/css" href="//lib.baomitu.com/fancybox/3.5.7/jquery.fancybox.min.css"><script>(function(w,d,t,u,n,s,e){w['SwiftypeObject']=n;w[n]=w[n]||function(){
+(w[n].q=w[n].q||[]).push(arguments);};s=d.createElement(t);
+e=d.getElementsByTagName(t)[0];s.async=1;s.src=u;e.parentNode.insertBefore(s,e);
+})(window,document,'script','//s.swiftypecdn.com/install/v2/st.js','_st');
+_st('install','s6HJQA19KFcyj1yfa9Lr','2.0.0');
+</script><script type="text/javascript" src="/js/codeblock-resizer.js?v=0.0.0"></script><script type="text/javascript" src="/js/smartresize.js?v=0.0.0"></script></div></body></html>
