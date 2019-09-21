@@ -1,0 +1,216 @@
+<!DOCTYPE html><html lang="zh-CN"><head><meta name="generator" content="Hexo 3.9.0"><meta http-equiv="content-type" content="text/html; charset=utf-8"><meta content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=0" name="viewport"><meta content="yes" name="apple-mobile-web-app-capable"><meta content="black-translucent" name="apple-mobile-web-app-status-bar-style"><meta content="telephone=no" name="format-detection"><meta name="description"><title>ElasticSearch的介绍和安装 | Vic</title><link rel="stylesheet" type="text/css" href="/css/style.css?v=0.0.0"><link rel="stylesheet" type="text/css" href="//lib.baomitu.com/normalize/8.0.1/normalize.min.css"><link rel="stylesheet" type="text/css" href="//lib.baomitu.com/pure/1.0.0/pure-min.css"><link rel="stylesheet" type="text/css" href="//lib.baomitu.com/pure/1.0.0/grids-responsive-min.css"><link rel="stylesheet" href="//lib.baomitu.com/font-awesome/4.7.0/css/font-awesome.min.css"><script type="text/javascript" src="//lib.baomitu.com/jquery/3.4.0/jquery.min.js"></script><link rel="icon" mask sizes="any" href="/favicon.ico"><link rel="Shortcut Icon" type="image/x-icon" href="/favicon.ico"><link rel="apple-touch-icon" href="/apple-touch-icon.png"><link rel="apple-touch-icon-precomposed" href="/apple-touch-icon.png"></head><body><div class="body_container"><div id="header"><div class="site-name"><h1 class="hidden">ElasticSearch的介绍和安装</h1><a id="logo" href="/.">Vic</a><p class="description">Simon,I just don't know</p></div><div id="nav-menu"><a class="current" href="/."><i class="fa fa-home"> 首页</i></a><a href="/archives/"><i class="fa fa-archive"> 归档</i></a><a href="/about/"><i class="fa fa-user"> 关于</i></a><a href="/comments/"><i class="fa fa-comments"> 留言</i></a><a href="/atom.xml"><i class="fa fa-rss"> 订阅</i></a></div></div><div class="pure-g" id="layout"><div class="pure-u-1 pure-u-md-3-4"><div class="content_container"><div class="post"><h1 class="post-title">ElasticSearch的介绍和安装</h1><div class="post-meta">Mar 22, 2019<span> | </span><span class="category"><a href="/categories/ElasticSearch/">ElasticSearch</a></span><script src="https://busuanzi.ibruce.info/busuanzi/2.3/busuanzi.pure.mini.js" async></script><span id="busuanzi_container_page_pv"> | <span id="busuanzi_value_page_pv"></span><span> 阅读</span></span></div><a class="disqus-comment-count" href="/2019/03/22/ElasticSearch的介绍和安装/#vcomment"><span class="valine-comment-count" data-xid="/2019/03/22/ElasticSearch的介绍和安装/"></span><span> 条评论</span></a><div class="post-content"><h2 id="前言"><a href="#前言" class="headerlink" title="前言"></a>前言</h2><p>之前有简单了解过Solr搜索引擎，不过未深入了解，之前因为公司业务需求，Leader要求我们用ElasticSearch进行商品的搜索，于是，Solr的文章还没出来，ElasticSearch的文章就先跟大家见面了。</p>
+<p>市面上很多搜索引擎都是基于Lucene进行扩展搭建的，今天主要讲的是全文检索技术：Elasticsearch。</p>
+<h2 id="简介"><a href="#简介" class="headerlink" title="简介"></a>简介</h2><h3 id="Elastic"><a href="#Elastic" class="headerlink" title="Elastic"></a>Elastic</h3><p>Elastic官网：<a href="https://www.elastic.co/cn/" target="_blank" rel="noopener">https://www.elastic.co/cn/</a></p>
+<p><img src="/2019/03/22/ElasticSearch的介绍和安装/1526464088259.png" alt="1526464088259"></p>
+<p>Elastic有一条完整的产品线：Elasticsearch、Kibana、Logstash等，前面说的三个就是大家常说的ELK技术栈。</p>
+<p> <img src="/2019/03/22/ElasticSearch的介绍和安装/1526464220142.png" alt="1526464220142"></p>
+<h3 id="Elasticsearch"><a href="#Elasticsearch" class="headerlink" title="Elasticsearch"></a>Elasticsearch</h3><p>Elasticsearch官网：<a href="https://www.elastic.co/cn/products/elasticsearch" target="_blank" rel="noopener">https://www.elastic.co/cn/products/elasticsearch</a></p>
+<p><img src="/2019/03/22/ElasticSearch的介绍和安装/1526464283575.png" alt="1526464283575"></p>
+<p>如上所述，Elasticsearch具备以下特点：</p>
+<ul>
+<li>分布式，无需人工搭建集群（solr就需要人为配置，使用Zookeeper作为注册中心）</li>
+<li>Restful风格，一切API都遵循Rest原则，容易上手</li>
+<li>近实时搜索，数据更新在Elasticsearch中几乎是完全同步的。</li>
+</ul>
+<h3 id="版本"><a href="#版本" class="headerlink" title="版本"></a>版本</h3><p>目前Elasticsearch最新的版本是6.2.4，我们就使用这个版本</p>
+<p>需要虚拟机JDK1.8及以上</p>
+<h2 id="安装和配置"><a href="#安装和配置" class="headerlink" title="安装和配置"></a>安装和配置</h2><p>为了模拟真实场景，我们将在linux下安装Elasticsearch。</p>
+<h3 id="新建一个用户leyou"><a href="#新建一个用户leyou" class="headerlink" title="新建一个用户leyou"></a>新建一个用户leyou</h3><figure class="highlight sh"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">useradd leyou</span><br></pre></td></tr></table></figure>
+
+<p>设置密码：</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">passwd leyou</span><br></pre></td></tr></table></figure>
+
+<p>出于安全考虑，elasticsearch默认不允许以root账号运行。</p>
+<p>切换用户：</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">su - leyou</span><br></pre></td></tr></table></figure>
+
+<h3 id="上传安装包-并解压"><a href="#上传安装包-并解压" class="headerlink" title="上传安装包,并解压"></a>上传安装包,并解压</h3><p>我们将安装包上传到：/home/leyou目录</p>
+<p> <img src="/2019/03/22/ElasticSearch的介绍和安装/1526465700159.png" alt="1526465700159"></p>
+<p>解压缩：</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">tar xvf elasticsearch-6.2.4.tar.gz</span><br></pre></td></tr></table></figure>
+
+<p> <img src="/2019/03/22/ElasticSearch的介绍和安装/1526465823442.png" alt="1526465823442"></p>
+<p>我们把目录重命名：</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">mv elasticsearch-6.2.4/ elasticsearch</span><br></pre></td></tr></table></figure>
+
+<p> <img src="/2019/03/22/ElasticSearch的介绍和安装/1526466797274.png" alt="1526466797274"></p>
+<p>进入，查看目录结构：</p>
+<p> <img src="/2019/03/22/ElasticSearch的介绍和安装/1526465896725.png" alt="1526465896725"></p>
+<h3 id="修改配置"><a href="#修改配置" class="headerlink" title="修改配置"></a>修改配置</h3><p>我们进入config目录：<code>cd config</code></p>
+<p>需要修改的配置文件有两个：</p>
+<p>  <img src="/2019/03/22/ElasticSearch的介绍和安装/1526465991472.png" alt="1526465991472"></p>
+<blockquote>
+<p>修改jvm配置</p>
+</blockquote>
+<p>Elasticsearch基于Lucene的，而Lucene底层是java实现，因此我们需要配置jvm参数</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">vim jvm.options</span><br></pre></td></tr></table></figure>
+
+<p>默认配置如下：</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">-Xms1g</span><br><span class="line">-Xmx1g</span><br></pre></td></tr></table></figure>
+
+<p>内存占用太多了，我们调小一些：</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">-Xms512m</span><br><span class="line">-Xmx512m</span><br></pre></td></tr></table></figure>
+
+<blockquote>
+<p>修改elasticsearch.yml</p>
+</blockquote>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">vim elasticsearch.yml</span><br></pre></td></tr></table></figure>
+
+<p>修改数据和日志目录：</p>
+<figure class="highlight yml"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line"><span class="string">path.data:</span> <span class="string">/home/leyou/elasticsearch/data</span> <span class="comment"># 数据目录位置</span></span><br><span class="line"><span class="string">path.logs:</span> <span class="string">/home/leyou/elasticsearch/logs</span> <span class="comment"># 日志目录位置</span></span><br></pre></td></tr></table></figure>
+
+<p>修改绑定的ip：</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">network.host: 0.0.0.0 # 绑定到0.0.0.0，允许任何ip来访问</span><br></pre></td></tr></table></figure>
+
+<p>默认只允许本机访问，修改为0.0.0.0后则可以远程访问</p>
+<p>目前我们是做的单机安装，如果要做集群，只需要在这个配置文件中添加其它节点信息即可。</p>
+<blockquote>
+<p>elasticsearch.yml的其它可配置信息：</p>
+</blockquote>
+<table>
+<thead>
+<tr>
+<th>属性名</th>
+<th>说明</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>cluster.name</td>
+<td>配置elasticsearch的集群名称，默认是elasticsearch。建议修改成一个有意义的名称。</td>
+</tr>
+<tr>
+<td>node.name</td>
+<td>节点名，es会默认随机指定一个名字，建议指定一个有意义的名称，方便管理</td>
+</tr>
+<tr>
+<td>path.conf</td>
+<td>设置配置文件的存储路径，tar或zip包安装默认在es根目录下的config文件夹，rpm安装默认在/etc/ elasticsearch</td>
+</tr>
+<tr>
+<td>path.data</td>
+<td>设置索引数据的存储路径，默认是es根目录下的data文件夹，可以设置多个存储路径，用逗号隔开</td>
+</tr>
+<tr>
+<td>path.logs</td>
+<td>设置日志文件的存储路径，默认是es根目录下的logs文件夹</td>
+</tr>
+<tr>
+<td>path.plugins</td>
+<td>设置插件的存放路径，默认是es根目录下的plugins文件夹</td>
+</tr>
+<tr>
+<td>bootstrap.memory_lock</td>
+<td>设置为true可以锁住ES使用的内存，避免内存进行swap</td>
+</tr>
+<tr>
+<td>network.host</td>
+<td>设置bind_host和publish_host，设置为0.0.0.0允许外网访问</td>
+</tr>
+<tr>
+<td>http.port</td>
+<td>设置对外服务的http端口，默认为9200。</td>
+</tr>
+<tr>
+<td>transport.tcp.port</td>
+<td>集群结点之间通信端口</td>
+</tr>
+<tr>
+<td>discovery.zen.ping.timeout</td>
+<td>设置ES自动发现节点连接超时的时间，默认为3秒，如果网络延迟高可设置大些</td>
+</tr>
+<tr>
+<td>discovery.zen.minimum_master_nodes</td>
+<td>主结点数量的最少值 ,此值的公式为：(master_eligible_nodes / 2) + 1 ，比如：有3个符合要求的主结点，那么这里要设置为2</td>
+</tr>
+<tr>
+<td></td>
+<td></td>
+</tr>
+</tbody></table>
+<h3 id="创建data和logs目录"><a href="#创建data和logs目录" class="headerlink" title="创建data和logs目录"></a>创建data和logs目录</h3><p>刚才我们修改配置，把data和logs目录修改指向了elasticsearch的安装目录。但是这两个目录并不存在，因此我们需要创建出来：</p>
+<p>进入Elasticsearch的根目录，然后创建：</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">mkdir data</span><br><span class="line">mkdir logs</span><br></pre></td></tr></table></figure>
+
+<p> <img src="/2019/03/22/ElasticSearch的介绍和安装/1526467246550.png" alt="1526467246550"></p>
+<h2 id="运行"><a href="#运行" class="headerlink" title="运行"></a>运行</h2><p>进入elasticsearch/bin目录，可以看到下面的执行文件：</p>
+<p> <img src="/2019/03/22/ElasticSearch的介绍和安装/1526467324965.png" alt="1526467324965"></p>
+<p>然后输入命令：</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">./elasticsearch</span><br></pre></td></tr></table></figure>
+
+<p>发现报错了，启动失败：</p>
+<h3 id="错误1：内核过低"><a href="#错误1：内核过低" class="headerlink" title="错误1：内核过低"></a>错误1：内核过低</h3><p><img src="/2019/03/22/ElasticSearch的介绍和安装/1526467439804.png" alt="1526467439804"></p>
+<p>我们使用的是centos6，其linux内核版本为2.6。而Elasticsearch的插件要求至少3.5以上版本。不过没关系，我们禁用这个插件即可。</p>
+<p>修改elasticsearch.yml文件，在最下面添加以后配置：</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">bootstrap.system_call_filter: false</span><br></pre></td></tr></table></figure>
+
+<p>然后重启</p>
+<h3 id="错误2："><a href="#错误2：" class="headerlink" title="错误2："></a>错误2：</h3><p>再次启动，又出错了：</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">[1]: max file descriptors [4096] for elasticsearch process likely too low, increase to at least [65536]</span><br></pre></td></tr></table></figure>
+
+<p>我们用的是leyou用户，而不是root，所以文件权限不足。</p>
+<p><strong>首先用root用户登录。</strong></p>
+<p>然后修改配置文件:</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">vim /etc/security/limits.conf</span><br></pre></td></tr></table></figure>
+
+<p>添加下面的内容：</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line">* soft nofile 65536</span><br><span class="line">* hard nofile 131072</span><br><span class="line">* soft nproc 4096</span><br><span class="line">* hard nproc 4096</span><br></pre></td></tr></table></figure>
+
+<h3 id="错误3"><a href="#错误3" class="headerlink" title="错误3"></a>错误3</h3><p>刚才报错中，还有一行：</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">[1]: max number of threads [1024] for user [leyou] is too low, increase to at least [4096]</span><br></pre></td></tr></table></figure>
+
+<p>这是线程数不够。</p>
+<p>继续修改配置：</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">vim /etc/security/limits.d/90-nproc.conf</span><br></pre></td></tr></table></figure>
+
+<p>修改下面的内容：</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">* soft nproc 1024</span><br></pre></td></tr></table></figure>
+
+<p>改为：</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">* soft nproc 4096</span><br></pre></td></tr></table></figure>
+
+<h3 id="错误4"><a href="#错误4" class="headerlink" title="错误4"></a>错误4</h3><figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">[3]: max virtual memory areas vm.max_map_count [65530] likely too low, increase to at least [262144]</span><br></pre></td></tr></table></figure>
+
+<p>继续修改配置文件：</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">vim /etc/sysctl.conf</span><br></pre></td></tr></table></figure>
+
+<p>添加下面内容：</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">vm.max_map_count=655360</span><br></pre></td></tr></table></figure>
+
+<p>然后执行命令：</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">sysctl -p</span><br></pre></td></tr></table></figure>
+
+<h3 id="重启终端窗口"><a href="#重启终端窗口" class="headerlink" title="重启终端窗口"></a>重启终端窗口</h3><p>所有错误修改完毕，一定要重启你的 Xshell终端，否则配置无效。</p>
+<h3 id="启动"><a href="#启动" class="headerlink" title="启动"></a>启动</h3><p>再次启动，终于成功了！</p>
+<p><img src="/2019/03/22/ElasticSearch的介绍和安装/1526472722397.png" alt="1526472722397"></p>
+<p>可以看到绑定了两个端口:</p>
+<ul>
+<li>9300：集群节点间通讯接口</li>
+<li>9200：客户端访问接口</li>
+</ul>
+<p>我们在浏览器中访问：<a href="http://192.168.56.101:9200" target="_blank" rel="noopener">http://192.168.56.101:9200</a></p>
+<p> <img src="/2019/03/22/ElasticSearch的介绍和安装/1526478245641.png" alt="1526478245641"></p>
+<p>## </p>
+</div><iframe src="/donate/?AliPayQR=/img/AliPayQR.jpg&amp;WeChatQR=/img/WeChatQR.jpg&amp;GitHub=null&amp;BTCQR=null&amp;BTCKEY=null&amp;PayPal=null" style="overflow-x:hidden; overflow-y:hidden; border:0xp none #fff; min-height:240px; width:100%;" frameborder="0" scrolling="no"></iframe><div class="tags"><a href="/tags/ElasticSearch/">ElasticSearch</a><a href="/tags/搜索引擎/">搜索引擎</a></div><div class="post-nav"><a class="pre" href="/2019/03/25/ElasticSearch可视化工具Kibana/">ElasticSearch可视化工具Kibana</a><a class="next" href="/2018/10/25/Thymeleaf实现页面静态化/">Thymeleaf实现页面静态化</a></div><div id="vcomment"></div><script src="//cdn1.lncld.net/static/js/3.0.4/av-min.js"></script><script src="//unpkg.com/valine@latest/dist/Valine.min.js"></script><script>var notify = 'false' ? true : false;
+var verify = 'false' ? true : false;
+var GUEST_INFO = ['nick','mail','link'];
+var guest_info = 'nick,mail'.split(',').filter(function(item){
+  return GUEST_INFO.indexOf(item) > -1
+});
+guest_info = guest_info.length == 0 ? GUEST_INFO :guest_info;
+window.valine = new Valine({
+  el:'#vcomment',
+  notify:notify,
+  verify:verify,
+  appId:'J60udJGFQdp0b1VIu2GllAkN-gzGzoHsz',
+  appKey:'ymPF38rxq6xmzdceDNs1sPHE',
+  placeholder:'来啊，快评论交流一下吧!',
+  avatar:'',
+  guest_info:guest_info,
+  pageSize:'10'
+})</script></div></div></div><div class="pure-u-1-4 hidden_mid_and_down"><div id="sidebar"><div class="widget"><div class="search-form"><input id="local-search-input" placeholder="Search" type="text" name="q" results="0"><div id="local-search-result"></div></div></div><div class="widget"><div class="widget-title"><i class="fa fa-folder-o"> 分类</i></div><ul class="category-list"><li class="category-list-item"><a class="category-list-link" href="/categories/ElasticSearch/">ElasticSearch</a><span class="category-list-count">5</span></li><li class="category-list-item"><a class="category-list-link" href="/categories/Redis/">Redis</a><span class="category-list-count">7</span></li><li class="category-list-item"><a class="category-list-link" href="/categories/Spring/">Spring</a><span class="category-list-count">1</span></li><li class="category-list-item"><a class="category-list-link" href="/categories/Spring-Boot初级/">Spring Boot初级</a><span class="category-list-count">8</span></li><li class="category-list-item"><a class="category-list-link" href="/categories/Spring-Boot高级/">Spring Boot高级</a><span class="category-list-count">8</span></li><li class="category-list-item"><a class="category-list-link" href="/categories/多线程/">多线程</a><span class="category-list-count">4</span></li></ul></div><div class="widget"><div class="widget-title"><i class="fa fa-star-o"> 标签</i></div><div class="tagcloud"><a href="/tags/Eureka/" style="font-size: 15px;">Eureka</a> <a href="/tags/ElasticSearch/" style="font-size: 15px;">ElasticSearch</a> <a href="/tags/搜索引擎/" style="font-size: 15px;">搜索引擎</a> <a href="/tags/ik分词器/" style="font-size: 15px;">ik分词器</a> <a href="/tags/Hexo/" style="font-size: 15px;">Hexo</a> <a href="/tags/反向代理/" style="font-size: 15px;">反向代理</a> <a href="/tags/Nginx/" style="font-size: 15px;">Nginx</a> <a href="/tags/无状态登录/" style="font-size: 15px;">无状态登录</a> <a href="/tags/JWT/" style="font-size: 15px;">JWT</a> <a href="/tags/RSA/" style="font-size: 15px;">RSA</a> <a href="/tags/非对称加密/" style="font-size: 15px;">非对称加密</a> <a href="/tags/Redis/" style="font-size: 15px;">Redis</a> <a href="/tags/Spring-Boot/" style="font-size: 15px;">Spring Boot</a> <a href="/tags/异步/" style="font-size: 15px;">异步</a> <a href="/tags/邮件/" style="font-size: 15px;">邮件</a> <a href="/tags/Dubbo/" style="font-size: 15px;">Dubbo</a> <a href="/tags/Zookeeper/" style="font-size: 15px;">Zookeeper</a> <a href="/tags/Kibana/" style="font-size: 15px;">Kibana</a> <a href="/tags/Spring-Cloud/" style="font-size: 15px;">Spring Cloud</a> <a href="/tags/安全/" style="font-size: 15px;">安全</a> <a href="/tags/Spring-Security/" style="font-size: 15px;">Spring Security</a> <a href="/tags/消息队列/" style="font-size: 15px;">消息队列</a> <a href="/tags/RabbitMQ/" style="font-size: 15px;">RabbitMQ</a> <a href="/tags/热部署/" style="font-size: 15px;">热部署</a> <a href="/tags/监管/" style="font-size: 15px;">监管</a> <a href="/tags/缓存/" style="font-size: 15px;">缓存</a> <a href="/tags/Spring-Data-ElasticSearch/" style="font-size: 15px;">Spring Data ElasticSearch</a> <a href="/tags/Thymeleaf/" style="font-size: 15px;">Thymeleaf</a> <a href="/tags/页面静态化/" style="font-size: 15px;">页面静态化</a> <a href="/tags/面试题/" style="font-size: 15px;">面试题</a> <a href="/tags/多线程/" style="font-size: 15px;">多线程</a> <a href="/tags/数据校验/" style="font-size: 15px;">数据校验</a> <a href="/tags/Hibernate-Validator/" style="font-size: 15px;">Hibernate Validator</a> <a href="/tags/Spring/" style="font-size: 15px;">Spring</a> <a href="/tags/跨域问题/" style="font-size: 15px;">跨域问题</a></div></div><div class="widget"><div class="widget-title"><i class="fa fa-file-o"> 最近文章</i></div><ul class="post-list"><li class="post-list-item"><a class="post-list-link" href="/2019/05/21/Spring-Data-ElasticSearch/">Spring Data ElasticSearch</a></li><li class="post-list-item"><a class="post-list-link" href="/2019/04/05/ElasticSearch-Rest风格API/">ElasticSearch Rest风格API</a></li><li class="post-list-item"><a class="post-list-link" href="/2019/03/29/ElasticSearch插件ik分词器/">ElasticSearch插件ik分词器</a></li><li class="post-list-item"><a class="post-list-link" href="/2019/03/25/ElasticSearch可视化工具Kibana/">ElasticSearch可视化工具Kibana</a></li><li class="post-list-item"><a class="post-list-link" href="/2019/03/22/ElasticSearch的介绍和安装/">ElasticSearch的介绍和安装</a></li><li class="post-list-item"><a class="post-list-link" href="/2018/10/25/Thymeleaf实现页面静态化/">Thymeleaf实现页面静态化</a></li><li class="post-list-item"><a class="post-list-link" href="/2018/09/19/JWT-RSA实现无状态登录/">JWT+RSA实现无状态登录</a></li><li class="post-list-item"><a class="post-list-link" href="/2018/09/06/服务端数据校验-Hibernate-Validator/">服务端数据校验 Hibernate Validator</a></li><li class="post-list-item"><a class="post-list-link" href="/2018/09/01/跨域问题和解决方案/">跨域问题和解决方案</a></li><li class="post-list-item"><a class="post-list-link" href="/2018/08/22/Nginx解决域名端口问题/">Nginx解决域名端口问题</a></li></ul></div><div class="widget"><div class="widget-title"><i class="fa fa-external-link"> 友情链接</i></div><ul></ul><a href="https://www.zhongmin.cn" title="中民保险网" target="_blank">中民保险网</a><ul></ul><a href="https://www.lingju.ai/index" title="灵聚智能" target="_blank">灵聚智能</a></div></div></div><div class="pure-u-1 pure-u-md-3-4"><div id="footer">Copyright © 2019 <a href="/." rel="nofollow">Vic.</a> Powered by<a rel="nofollow" target="_blank" href="https://hexo.io"> Hexo.</a><a rel="nofollow" target="_blank" href="https://github.com/tufu9441/maupassant-hexo"> Theme</a> by<a rel="nofollow" target="_blank" href="https://github.com/pagecho"> Cho.</a></div></div></div><a class="show" id="rocket" href="#top"></a><script type="text/javascript" src="/js/totop.js?v=0.0.0" async></script><script type="text/javascript" src="//lib.baomitu.com/fancybox/3.5.7/jquery.fancybox.min.js" async></script><script type="text/javascript" src="/js/fancybox.js?v=0.0.0" async></script><link rel="stylesheet" type="text/css" href="//lib.baomitu.com/fancybox/3.5.7/jquery.fancybox.min.css"><script type="text/javascript" src="/js/search.js?v=0.0.0"></script><script>var search_path = 'search.xml';
+if (search_path.length == 0) {
+   search_path = 'search.xml';
+}
+var path = '/' + search_path;
+searchFunc(path, 'local-search-input', 'local-search-result');
+</script><script type="text/javascript" src="/js/codeblock-resizer.js?v=0.0.0"></script><script type="text/javascript" src="/js/smartresize.js?v=0.0.0"></script></div></body></html>
