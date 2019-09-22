@@ -6,43 +6,28 @@
 <li>SQL数据库服务器的参数调优</li>
 </ol>
 <h2 id="查询优化"><a href="#查询优化" class="headerlink" title="查询优化"></a>查询优化</h2><h3 id="永远小表驱动大表"><a href="#永远小表驱动大表" class="headerlink" title="永远小表驱动大表"></a>永远小表驱动大表</h3><p>优化原则：小表驱动大表，即小的数据集驱动大的数据集。</p>
-<ul>
-<li><p>当A表的数据集必须小于B表的数据集时，用exists优于in</p>
-<ul>
-<li><figure class="highlight sql"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">select</span> * <span class="keyword">from</span> A <span class="keyword">where</span> <span class="keyword">id</span> <span class="keyword">in</span> (<span class="keyword">select</span> <span class="keyword">id</span> <span class="keyword">from</span> B)</span><br></pre></td></tr></table></figure>
-</li>
-<li><p>等价于</p>
-</li>
-<li><figure class="highlight sql"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">for <span class="keyword">select</span> <span class="keyword">id</span> <span class="keyword">from</span> B</span><br><span class="line"><span class="keyword">for</span> <span class="keyword">select</span> * <span class="keyword">from</span> A <span class="keyword">where</span> A.id = B.id</span><br></pre></td></tr></table></figure>
-</li>
-</ul>
-</li>
-<li><p>当B表的数据集必须小于A表的数据集时，用in优于exists</p>
-<ul>
-<li><figure class="highlight sql"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">select</span> * <span class="keyword">from</span> A <span class="keyword">where</span> <span class="keyword">exists</span> (<span class="keyword">select</span> <span class="number">1</span> <span class="keyword">from</span> B <span class="keyword">where</span> B.id = A.id)</span><br></pre></td></tr></table></figure>
-</li>
-<li><p>等价于</p>
-</li>
-<li><figure class="highlight sql"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">for <span class="keyword">select</span> <span class="keyword">id</span> <span class="keyword">from</span> A</span><br><span class="line"><span class="keyword">for</span> <span class="keyword">select</span> * <span class="keyword">from</span> B <span class="keyword">where</span> B.id = A.id</span><br></pre></td></tr></table></figure>
+<p>当A表的数据集必须小于B表的数据集时，用exists优于in</p>
+<figure class="highlight sql"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">select</span> * <span class="keyword">from</span> A <span class="keyword">where</span> <span class="keyword">id</span> <span class="keyword">in</span> (<span class="keyword">select</span> <span class="keyword">id</span> <span class="keyword">from</span> B)</span><br></pre></td></tr></table></figure>
 
-</li>
-</ul>
-</li>
-</ul>
+<p>等价于</p>
+<figure class="highlight sql"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">for <span class="keyword">select</span> <span class="keyword">id</span> <span class="keyword">from</span> B</span><br><span class="line"><span class="keyword">for</span> <span class="keyword">select</span> * <span class="keyword">from</span> A <span class="keyword">where</span> A.id = B.id</span><br></pre></td></tr></table></figure>
+
+<p>当B表的数据集必须小于A表的数据集时，用in优于exists</p>
+<figure class="highlight sql"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">select</span> * <span class="keyword">from</span> A <span class="keyword">where</span> <span class="keyword">exists</span> (<span class="keyword">select</span> <span class="number">1</span> <span class="keyword">from</span> B <span class="keyword">where</span> B.id = A.id)</span><br></pre></td></tr></table></figure>
+
+<p>等价于</p>
+<figure class="highlight sql"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">for <span class="keyword">select</span> <span class="keyword">id</span> <span class="keyword">from</span> A</span><br><span class="line"><span class="keyword">for</span> <span class="keyword">select</span> * <span class="keyword">from</span> B <span class="keyword">where</span> B.id = A.id</span><br></pre></td></tr></table></figure>
+
 <p><strong>注意</strong>：A表与B表的ID字段应建立索引。</p>
 <p><strong>总结</strong></p>
 <p>in后面跟的是小表，exists后面跟的是大表（简记：in小，exists大）</p>
-<p>对于exists</p>
-<ul>
-<li><p>SELECT … FROM table WHERE EXISTS(subquery)</p>
-</li>
-<li><p>该语法可以理解为：<strong>将主查询的数据，放到子查询中做条件验证，根据验证结果（TRUE或FALSE）来决定主查询的数据结果是否得以保留。</strong></p>
-</li>
-<li><p>EXISTS子查询往往也可以用条件表达式/其他子查询或者JOIN来替代，何种最优需要具体问题具体分析。</p>
-</li>
-</ul>
+<p><strong>对于exists</strong></p>
+<p>SELECT … FROM table WHERE EXISTS(subquery)</p>
+<p>该语法可以理解为：<strong>将主查询的数据，放到子查询中做条件验证，根据验证结果（TRUE或FALSE）来决定主查询的数据结果是否得以保留。</strong></p>
+<p>EXISTS子查询往往也可以用条件表达式/其他子查询或者JOIN来替代，何种最优需要具体问题具体分析。</p>
 <h3 id="ORDER-BY关键字优化"><a href="#ORDER-BY关键字优化" class="headerlink" title="ORDER BY关键字优化"></a>ORDER BY关键字优化</h3><p>ORDER BY子句，尽量使用Index方式排序，避免使用FileSort方式排序</p>
-<p><img src="/2017/11/22/MySQL查询优化规则/20190814180315715.png" alt></p>
+<figure class="highlight sql"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">create</span> <span class="keyword">table</span> tblA(</span><br><span class="line">	<span class="keyword">id</span> <span class="built_in">int</span> primary <span class="keyword">key</span> <span class="keyword">not</span> <span class="literal">null</span> auto_increment,</span><br><span class="line">    age <span class="built_in">int</span>,</span><br><span class="line">    birth <span class="built_in">timestamp</span> <span class="keyword">not</span> <span class="literal">null</span></span><br><span class="line">)</span><br><span class="line"></span><br><span class="line"><span class="keyword">insert</span> <span class="keyword">into</span> tblA(age,birth) <span class="keyword">values</span>(<span class="number">22</span>,<span class="keyword">now</span>());</span><br><span class="line"><span class="keyword">insert</span> <span class="keyword">into</span> tblA(age,birth) <span class="keyword">values</span>(<span class="number">22</span>,<span class="keyword">now</span>());</span><br><span class="line"><span class="keyword">insert</span> <span class="keyword">into</span> tblA(age,birth) <span class="keyword">values</span>(<span class="number">22</span>,<span class="keyword">now</span>());</span><br><span class="line"></span><br><span class="line"><span class="keyword">create</span> <span class="keyword">index</span> idx_A_ageBirth <span class="keyword">on</span> tblA(age,birth);</span><br><span class="line"></span><br><span class="line"><span class="keyword">select</span> * <span class="keyword">from</span> tblA;</span><br></pre></td></tr></table></figure>
+
 <p>case1</p>
 <p><img src="/2017/11/22/MySQL查询优化规则/20190814180611547.png" alt></p>
 <p>case2</p>
@@ -61,27 +46,19 @@
 <p>如果不在索引列上，filesort有两种算法：</p>
 <ul>
 <li><p>双路排序</p>
-<ul>
-<li>MySQL4.1之前是使用双路排序，字面意思就是<strong>两次</strong>扫描磁盘，最终得到数据。读取行指针和order by列，对他们进行排序，然后扫描已经排好序的列表，按照列表中的值重新从列表中读取对应的数据输出。</li>
-<li>从磁盘取排序字段，在buffer进行排序，再从磁盘读取其他字段。</li>
-</ul>
+<p>MySQL4.1之前是使用双路排序，字面意思就是<strong>两次</strong>扫描磁盘，最终得到数据。读取行指针和order by列，对他们进行排序，然后扫描已经排好序的列表，按照列表中的值重新从列表中读取对应的数据输出。</p>
+<p>从磁盘取排序字段，在buffer进行排序，再从磁盘读取其他字段。</p>
 </li>
 <li><p>取一批数据，要对磁盘进行了两次扫描，众所周知，I\O是很耗时的，所以在mysql4.1之后，出现了第二种改进的算法，就是单路排序</p>
 </li>
 <li><p>单路排序</p>
-<ul>
-<li>从磁盘读取查询需要的所有列，按照order by列在buffer对它们进行排序，然后扫描排序后的列表进行输出，它的效率更快一些，避免了第二次读取数据。并且把随机IO变成了顺序IO，但是它会使用更多的空间。</li>
-</ul>
+<p>从磁盘读取查询需要的所有列，按照order by列在buffer对它们进行排序，然后扫描排序后的列表进行输出，它的效率更快一些，避免了第二次读取数据。并且把随机IO变成了顺序IO，但是它会使用更多的空间。</p>
 </li>
 <li><p>结论及引申出的问题</p>
-<ul>
-<li><p>由于单路是后出的，总体而言好过双路</p>
-</li>
-<li><p>但是用单路有问题</p>
+<p>由于单路是后出的，总体而言好过双路</p>
+<p>但是用单路有问题</p>
 <p><img src="/2017/11/22/MySQL查询优化规则/20190814181952263.png" alt></p>
 <p>本来想省一次I/O操作，反而导致了大量的I/O操作，反而得不偿失。（<strong>原因：数据的总大小超过sort_buffer的容量</strong>）</p>
-</li>
-</ul>
 </li>
 </ul>
 <p>优化策略</p>
@@ -90,13 +67,24 @@
 <li>增大max_length_for_sort_data参数的设置</li>
 <li>Why<img src="/2017/11/22/MySQL查询优化规则/20190814182229634.png" alt></li>
 </ul>
-<p>小总结</p>
-<p><img src="/2017/11/22/MySQL查询优化规则/2019081418271350.png" alt></p>
-<h3 id="GROUP-BY关键字优化"><a href="#GROUP-BY关键字优化" class="headerlink" title="GROUP BY关键字优化"></a>GROUP BY关键字优化</h3><ul>
-<li>group by实质是先排序后进行分组，遵照索引建的最佳左前缀。</li>
-<li>当无法使用索引列，增大max_length_for_sort_data参数的设置+增大sort_buffer_size参数的设置。</li>
-<li>where高于having，能写在where限定的条件就不要去having限定了。</li>
-</ul>
+<p><strong>总结</strong></p>
+<p>MySQL两种排序方式：文件排序和扫描有序索引排序</p>
+<p>MySQL能为排序和查询使用相同的索引</p>
+<figure class="highlight sql"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">index a_b_c(a,b,c)</span><br></pre></td></tr></table></figure>
+
+<p>order by能使用索引最左前缀</p>
+<figure class="highlight sql"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line">order by a,</span><br><span class="line">order by a,b</span><br><span class="line">order by a,b,c</span><br><span class="line">order by a desc,b desc,c desc</span><br></pre></td></tr></table></figure>
+
+<p>如果where使用索引的最左前缀为常量，则order by能使用索引</p>
+<figure class="highlight"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line">where a = const order by b,c</span><br><span class="line">where a = const and b = const order by c</span><br><span class="line">where a = const and b&gt;const order by b,c</span><br></pre></td></tr></table></figure>
+
+<p>不能使用索引进行排序</p>
+<figure class="highlight sql"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><span class="line">order by a asc,b desc,c desc <span class="comment">#排序不一致</span></span><br><span class="line">where g = const order by b,c <span class="comment">#丢失a索引</span></span><br><span class="line">where a = const order by c <span class="comment">#丢失b索引</span></span><br><span class="line">where a = const order by a,d <span class="comment">#d不是索引的一部分</span></span><br><span class="line">where a in(...) order by b,c <span class="comment">#对于排序来说，多个相同条件也是范围查询</span></span><br></pre></td></tr></table></figure>
+
+<p>index a_b_c(a,b,c)</p>
+<h3 id="GROUP-BY关键字优化"><a href="#GROUP-BY关键字优化" class="headerlink" title="GROUP BY关键字优化"></a>GROUP BY关键字优化</h3><p>group by实质是先排序后进行分组，遵照索引建的最佳左前缀。</p>
+<p>当无法使用索引列，增大max_length_for_sort_data参数的设置+增大sort_buffer_size参数的设置。</p>
+<p>where高于having，能写在where限定的条件就不要去having限定了。</p>
 </div><iframe src="/donate/?AliPayQR=/img/AliPayQR.jpg&amp;WeChatQR=/img/WeChatQR.jpg&amp;GitHub=null&amp;BTCQR=null&amp;BTCKEY=null&amp;PayPal=null" style="overflow-x:hidden; overflow-y:hidden; border:0xp none #fff; min-height:240px; width:100%;" frameborder="0" scrolling="no"></iframe><div class="tags"><a href="/tags/MySQL/">MySQL</a></div><div class="post-nav"><a class="pre" href="/2017/11/29/MySQL如何开启慢查询日志/">MySQL如何开启慢查询日志</a><a class="next" href="/2017/11/15/MySQL索引优化规则/">MySQL索引优化规则</a></div><div id="vcomment"></div><script src="//cdn1.lncld.net/static/js/3.0.4/av-min.js"></script><script src="//unpkg.com/valine@latest/dist/Valine.min.js"></script><script>var notify = 'false' ? true : false;
 var verify = 'false' ? true : false;
 var GUEST_INFO = ['nick','mail','link'];
@@ -114,7 +102,7 @@ window.valine = new Valine({
   avatar:'',
   guest_info:guest_info,
   pageSize:'10'
-})</script></div></div></div><div class="pure-u-1-4 hidden_mid_and_down"><div id="sidebar"><div class="widget"><div class="search-form"><input id="local-search-input" placeholder="Search" type="text" name="q" results="0"><div id="local-search-result"></div></div></div><div class="widget"><div class="widget-title"><i class="fa fa-folder-o"> 分类</i></div><ul class="category-list"><li class="category-list-item"><a class="category-list-link" href="/categories/ElasticSearch/">ElasticSearch</a><span class="category-list-count">5</span></li><li class="category-list-item"><a class="category-list-link" href="/categories/MySQL/">MySQL</a><span class="category-list-count">10</span></li><li class="category-list-item"><a class="category-list-link" href="/categories/Redis/">Redis</a><span class="category-list-count">8</span></li><li class="category-list-item"><a class="category-list-link" href="/categories/Spring/">Spring</a><span class="category-list-count">1</span></li><li class="category-list-item"><a class="category-list-link" href="/categories/Spring-Boot初级/">Spring Boot初级</a><span class="category-list-count">8</span></li><li class="category-list-item"><a class="category-list-link" href="/categories/Spring-Boot高级/">Spring Boot高级</a><span class="category-list-count">8</span></li><li class="category-list-item"><a class="category-list-link" href="/categories/多线程/">多线程</a><span class="category-list-count">4</span></li></ul></div><div class="widget"><div class="widget-title"><i class="fa fa-star-o"> 标签</i></div><div class="tagcloud"><a href="/tags/Eureka/" style="font-size: 15px;">Eureka</a> <a href="/tags/ElasticSearch/" style="font-size: 15px;">ElasticSearch</a> <a href="/tags/搜索引擎/" style="font-size: 15px;">搜索引擎</a> <a href="/tags/ik分词器/" style="font-size: 15px;">ik分词器</a> <a href="/tags/Hexo/" style="font-size: 15px;">Hexo</a> <a href="/tags/Redis/" style="font-size: 15px;">Redis</a> <a href="/tags/MySQL/" style="font-size: 15px;">MySQL</a> <a href="/tags/慢查询/" style="font-size: 15px;">慢查询</a> <a href="/tags/索引/" style="font-size: 15px;">索引</a> <a href="/tags/主从复制/" style="font-size: 15px;">主从复制</a> <a href="/tags/锁/" style="font-size: 15px;">锁</a> <a href="/tags/反向代理/" style="font-size: 15px;">反向代理</a> <a href="/tags/Nginx/" style="font-size: 15px;">Nginx</a> <a href="/tags/Spring-Boot/" style="font-size: 15px;">Spring Boot</a> <a href="/tags/异步/" style="font-size: 15px;">异步</a> <a href="/tags/邮件/" style="font-size: 15px;">邮件</a> <a href="/tags/Dubbo/" style="font-size: 15px;">Dubbo</a> <a href="/tags/Zookeeper/" style="font-size: 15px;">Zookeeper</a> <a href="/tags/Kibana/" style="font-size: 15px;">Kibana</a> <a href="/tags/Spring-Cloud/" style="font-size: 15px;">Spring Cloud</a> <a href="/tags/安全/" style="font-size: 15px;">安全</a> <a href="/tags/Spring-Security/" style="font-size: 15px;">Spring Security</a> <a href="/tags/消息队列/" style="font-size: 15px;">消息队列</a> <a href="/tags/RabbitMQ/" style="font-size: 15px;">RabbitMQ</a> <a href="/tags/热部署/" style="font-size: 15px;">热部署</a> <a href="/tags/监管/" style="font-size: 15px;">监管</a> <a href="/tags/缓存/" style="font-size: 15px;">缓存</a> <a href="/tags/Spring-Data-ElasticSearch/" style="font-size: 15px;">Spring Data ElasticSearch</a> <a href="/tags/Spring/" style="font-size: 15px;">Spring</a> <a href="/tags/Thymeleaf/" style="font-size: 15px;">Thymeleaf</a> <a href="/tags/页面静态化/" style="font-size: 15px;">页面静态化</a> <a href="/tags/面试题/" style="font-size: 15px;">面试题</a> <a href="/tags/多线程/" style="font-size: 15px;">多线程</a> <a href="/tags/数据校验/" style="font-size: 15px;">数据校验</a> <a href="/tags/Hibernate-Validator/" style="font-size: 15px;">Hibernate Validator</a> <a href="/tags/跨域问题/" style="font-size: 15px;">跨域问题</a></div></div><div class="widget"><div class="widget-title"><i class="fa fa-file-o"> 最近文章</i></div><ul class="post-list"><li class="post-list-item"><a class="post-list-link" href="/2019/05/21/Spring-Data-ElasticSearch/">Spring Data ElasticSearch</a></li><li class="post-list-item"><a class="post-list-link" href="/2019/04/05/ElasticSearch-Rest风格API/">ElasticSearch Rest风格API</a></li><li class="post-list-item"><a class="post-list-link" href="/2019/03/29/ElasticSearch插件ik分词器/">ElasticSearch插件ik分词器</a></li><li class="post-list-item"><a class="post-list-link" href="/2019/03/25/ElasticSearch可视化工具Kibana/">ElasticSearch可视化工具Kibana</a></li><li class="post-list-item"><a class="post-list-link" href="/2019/03/22/ElasticSearch的介绍和安装/">ElasticSearch的介绍和安装</a></li><li class="post-list-item"><a class="post-list-link" href="/2018/10/25/Thymeleaf实现页面静态化/">Thymeleaf实现页面静态化</a></li><li class="post-list-item"><a class="post-list-link" href="/2018/09/19/JWT-RSA实现无状态登录/">JWT+RSA实现无状态登录</a></li><li class="post-list-item"><a class="post-list-link" href="/2018/09/06/服务端数据校验-Hibernate-Validator/">服务端数据校验 Hibernate Validator</a></li><li class="post-list-item"><a class="post-list-link" href="/2018/09/01/跨域问题和解决方案/">跨域问题和解决方案</a></li><li class="post-list-item"><a class="post-list-link" href="/2018/08/22/Nginx解决域名端口问题/">Nginx解决域名端口问题</a></li></ul></div><div class="widget"><div class="widget-title"><i class="fa fa-external-link"> 友情链接</i></div><ul></ul><a href="https://www.zhongmin.cn" title="中民保险网" target="_blank">中民保险网</a><ul></ul><a href="https://www.lingju.ai/index" title="灵聚智能" target="_blank">灵聚智能</a></div></div></div><div class="pure-u-1 pure-u-md-3-4"><div id="footer">Copyright © 2019 <a href="/." rel="nofollow">Vic.</a> Powered by<a rel="nofollow" target="_blank" href="https://hexo.io"> Hexo.</a><a rel="nofollow" target="_blank" href="https://github.com/tufu9441/maupassant-hexo"> Theme</a> by<a rel="nofollow" target="_blank" href="https://github.com/pagecho"> Cho.</a></div></div></div><a class="show" id="rocket" href="#top"></a><script type="text/javascript" src="/js/totop.js?v=0.0.0" async></script><script type="text/javascript" src="//lib.baomitu.com/fancybox/3.5.7/jquery.fancybox.min.js" async></script><script type="text/javascript" src="/js/fancybox.js?v=0.0.0" async></script><link rel="stylesheet" type="text/css" href="//lib.baomitu.com/fancybox/3.5.7/jquery.fancybox.min.css"><script type="text/javascript" src="/js/search.js?v=0.0.0"></script><script>var search_path = 'search.xml';
+})</script></div></div></div><div class="pure-u-1-4 hidden_mid_and_down"><div id="sidebar"><div class="widget"><div class="search-form"><input id="local-search-input" placeholder="Search" type="text" name="q" results="0"><div id="local-search-result"></div></div></div><div class="widget"><div class="widget-title"><i class="fa fa-folder-o"> 分类</i></div><ul class="category-list"><li class="category-list-item"><a class="category-list-link" href="/categories/ElasticSearch/">ElasticSearch</a><span class="category-list-count">5</span></li><li class="category-list-item"><a class="category-list-link" href="/categories/MySQL/">MySQL</a><span class="category-list-count">10</span></li><li class="category-list-item"><a class="category-list-link" href="/categories/Redis/">Redis</a><span class="category-list-count">8</span></li><li class="category-list-item"><a class="category-list-link" href="/categories/Spring/">Spring</a><span class="category-list-count">1</span></li><li class="category-list-item"><a class="category-list-link" href="/categories/Spring-Boot初级/">Spring Boot初级</a><span class="category-list-count">8</span></li><li class="category-list-item"><a class="category-list-link" href="/categories/Spring-Boot高级/">Spring Boot高级</a><span class="category-list-count">8</span></li><li class="category-list-item"><a class="category-list-link" href="/categories/多线程/">多线程</a><span class="category-list-count">4</span></li></ul></div><div class="widget"><div class="widget-title"><i class="fa fa-star-o"> 标签</i></div><div class="tagcloud"><a href="/tags/Eureka/" style="font-size: 15px;">Eureka</a> <a href="/tags/搜索引擎/" style="font-size: 15px;">搜索引擎</a> <a href="/tags/Kibana/" style="font-size: 15px;">Kibana</a> <a href="/tags/ik分词器/" style="font-size: 15px;">ik分词器</a> <a href="/tags/Hexo/" style="font-size: 15px;">Hexo</a> <a href="/tags/Redis/" style="font-size: 15px;">Redis</a> <a href="/tags/MySQL/" style="font-size: 15px;">MySQL</a> <a href="/tags/慢查询/" style="font-size: 15px;">慢查询</a> <a href="/tags/索引/" style="font-size: 15px;">索引</a> <a href="/tags/主从复制/" style="font-size: 15px;">主从复制</a> <a href="/tags/锁/" style="font-size: 15px;">锁</a> <a href="/tags/反向代理/" style="font-size: 15px;">反向代理</a> <a href="/tags/Nginx/" style="font-size: 15px;">Nginx</a> <a href="/tags/Spring-Boot/" style="font-size: 15px;">Spring Boot</a> <a href="/tags/异步/" style="font-size: 15px;">异步</a> <a href="/tags/邮件/" style="font-size: 15px;">邮件</a> <a href="/tags/Dubbo/" style="font-size: 15px;">Dubbo</a> <a href="/tags/Zookeeper/" style="font-size: 15px;">Zookeeper</a> <a href="/tags/ElasticSearch/" style="font-size: 15px;">ElasticSearch</a> <a href="/tags/Spring-Cloud/" style="font-size: 15px;">Spring Cloud</a> <a href="/tags/安全/" style="font-size: 15px;">安全</a> <a href="/tags/Spring-Security/" style="font-size: 15px;">Spring Security</a> <a href="/tags/热部署/" style="font-size: 15px;">热部署</a> <a href="/tags/监管/" style="font-size: 15px;">监管</a> <a href="/tags/消息队列/" style="font-size: 15px;">消息队列</a> <a href="/tags/RabbitMQ/" style="font-size: 15px;">RabbitMQ</a> <a href="/tags/缓存/" style="font-size: 15px;">缓存</a> <a href="/tags/Spring-Data-ElasticSearch/" style="font-size: 15px;">Spring Data ElasticSearch</a> <a href="/tags/Thymeleaf/" style="font-size: 15px;">Thymeleaf</a> <a href="/tags/页面静态化/" style="font-size: 15px;">页面静态化</a> <a href="/tags/Spring/" style="font-size: 15px;">Spring</a> <a href="/tags/面试题/" style="font-size: 15px;">面试题</a> <a href="/tags/多线程/" style="font-size: 15px;">多线程</a> <a href="/tags/数据校验/" style="font-size: 15px;">数据校验</a> <a href="/tags/Hibernate-Validator/" style="font-size: 15px;">Hibernate Validator</a> <a href="/tags/跨域问题/" style="font-size: 15px;">跨域问题</a></div></div><div class="widget"><div class="widget-title"><i class="fa fa-file-o"> 最近文章</i></div><ul class="post-list"><li class="post-list-item"><a class="post-list-link" href="/2019/05/21/Spring-Data-ElasticSearch/">Spring Data ElasticSearch</a></li><li class="post-list-item"><a class="post-list-link" href="/2019/04/05/ElasticSearch-Rest风格API/">ElasticSearch Rest风格API</a></li><li class="post-list-item"><a class="post-list-link" href="/2019/03/29/ElasticSearch插件ik分词器/">ElasticSearch插件ik分词器</a></li><li class="post-list-item"><a class="post-list-link" href="/2019/03/25/ElasticSearch可视化工具Kibana/">ElasticSearch可视化工具Kibana</a></li><li class="post-list-item"><a class="post-list-link" href="/2019/03/22/ElasticSearch的介绍和安装/">ElasticSearch的介绍和安装</a></li><li class="post-list-item"><a class="post-list-link" href="/2018/10/25/Thymeleaf实现页面静态化/">Thymeleaf实现页面静态化</a></li><li class="post-list-item"><a class="post-list-link" href="/2018/09/19/JWT-RSA实现无状态登录/">JWT+RSA实现无状态登录</a></li><li class="post-list-item"><a class="post-list-link" href="/2018/09/06/服务端数据校验-Hibernate-Validator/">服务端数据校验 Hibernate Validator</a></li><li class="post-list-item"><a class="post-list-link" href="/2018/09/01/跨域问题和解决方案/">跨域问题和解决方案</a></li><li class="post-list-item"><a class="post-list-link" href="/2018/08/22/Nginx解决域名端口问题/">Nginx解决域名端口问题</a></li></ul></div><div class="widget"><div class="widget-title"><i class="fa fa-external-link"> 友情链接</i></div><ul></ul><a href="https://www.zhongmin.cn" title="中民保险网" target="_blank">中民保险网</a><ul></ul><a href="https://www.lingju.ai/index" title="灵聚智能" target="_blank">灵聚智能</a></div></div></div><div class="pure-u-1 pure-u-md-3-4"><div id="footer">Copyright © 2019 <a href="/." rel="nofollow">Vic.</a> Powered by<a rel="nofollow" target="_blank" href="https://hexo.io"> Hexo.</a><a rel="nofollow" target="_blank" href="https://github.com/tufu9441/maupassant-hexo"> Theme</a> by<a rel="nofollow" target="_blank" href="https://github.com/pagecho"> Cho.</a></div></div></div><a class="show" id="rocket" href="#top"></a><script type="text/javascript" src="/js/totop.js?v=0.0.0" async></script><script type="text/javascript" src="//lib.baomitu.com/fancybox/3.5.7/jquery.fancybox.min.js" async></script><script type="text/javascript" src="/js/fancybox.js?v=0.0.0" async></script><link rel="stylesheet" type="text/css" href="//lib.baomitu.com/fancybox/3.5.7/jquery.fancybox.min.css"><script type="text/javascript" src="/js/search.js?v=0.0.0"></script><script>var search_path = 'search.xml';
 if (search_path.length == 0) {
    search_path = 'search.xml';
 }
