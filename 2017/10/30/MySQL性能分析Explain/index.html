@@ -1,0 +1,90 @@
+<!DOCTYPE html><html lang="zh-CN"><head><meta name="generator" content="Hexo 3.9.0"><meta http-equiv="content-type" content="text/html; charset=utf-8"><meta content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=0" name="viewport"><meta content="yes" name="apple-mobile-web-app-capable"><meta content="black-translucent" name="apple-mobile-web-app-status-bar-style"><meta content="telephone=no" name="format-detection"><meta name="description"><title>MySQL性能分析Explain | Vic</title><link rel="stylesheet" type="text/css" href="/css/style.css?v=0.0.0"><link rel="stylesheet" type="text/css" href="//lib.baomitu.com/normalize/8.0.1/normalize.min.css"><link rel="stylesheet" type="text/css" href="//lib.baomitu.com/pure/1.0.0/pure-min.css"><link rel="stylesheet" type="text/css" href="//lib.baomitu.com/pure/1.0.0/grids-responsive-min.css"><link rel="stylesheet" href="//lib.baomitu.com/font-awesome/4.7.0/css/font-awesome.min.css"><script type="text/javascript" src="//lib.baomitu.com/jquery/3.4.0/jquery.min.js"></script><link rel="icon" mask sizes="any" href="/favicon.ico"><link rel="Shortcut Icon" type="image/x-icon" href="/favicon.ico"><link rel="apple-touch-icon" href="/apple-touch-icon.png"><link rel="apple-touch-icon-precomposed" href="/apple-touch-icon.png"></head><body><div class="body_container"><div id="header"><div class="site-name"><h1 class="hidden">MySQL性能分析Explain</h1><a id="logo" href="/.">Vic</a><p class="description">Simon,I just don't know</p></div><div id="nav-menu"><a class="current" href="/."><i class="fa fa-home"> 首页</i></a><a href="/archives/"><i class="fa fa-archive"> 归档</i></a><a href="/about/"><i class="fa fa-user"> 关于</i></a><a href="/comments/"><i class="fa fa-comments"> 留言</i></a><a href="/atom.xml"><i class="fa fa-rss"> 订阅</i></a></div></div><div class="pure-g" id="layout"><div class="pure-u-1 pure-u-md-3-4"><div class="content_container"><div class="post"><h1 class="post-title">MySQL性能分析Explain</h1><div class="post-meta">Oct 30, 2017<span> | </span><span class="category"><a href="/categories/MySQL/">MySQL</a></span><script src="https://busuanzi.ibruce.info/busuanzi/2.3/busuanzi.pure.mini.js" async></script><span id="busuanzi_container_page_pv"> | <span id="busuanzi_value_page_pv"></span><span> 阅读</span></span></div><a class="disqus-comment-count" href="/2017/10/30/MySQL性能分析Explain/#vcomment"><span class="valine-comment-count" data-xid="/2017/10/30/MySQL性能分析Explain/"></span><span> 条评论</span></a><div class="post-content"><h2 id="MySQL常见瓶颈"><a href="#MySQL常见瓶颈" class="headerlink" title="MySQL常见瓶颈"></a>MySQL常见瓶颈</h2><p>CPU：CPU在饱和的时候一般发生在数据装入内存或从磁盘上读取数据时候</p>
+<p>IO：磁盘I/O瓶颈发生在装入数据远大于内存容量的时候</p>
+<p>服务器硬件的性能瓶颈：<code>top</code>，<code>free</code>，<code>iostat</code>和<code>vmstat</code>来查看系统的性能状态</p>
+<h2 id="Explain"><a href="#Explain" class="headerlink" title="Explain"></a>Explain</h2><p>使用EXPLAIN关键字可以模拟优化器<code>MySQL Query Optimizer</code>执行SQL查询语句，从而知道MySQL是如何处理你的SQL语句的。分析查询语句或是表结构的性能瓶颈。</p>
+<h3 id="功能"><a href="#功能" class="headerlink" title="功能"></a>功能</h3><p>表的读取顺序</p>
+<p>数据读取操作的操作类型</p>
+<p>哪些索引可以使用</p>
+<p>哪些索引被实际使用</p>
+<p>表之间的应用</p>
+<p>每张表有多少行被优化器查询</p>
+<h3 id="使用步骤"><a href="#使用步骤" class="headerlink" title="使用步骤"></a>使用步骤</h3><p>Explain+SQL语句</p>
+<p><img src="/2017/10/30/MySQL性能分析Explain/20190811134519782.png" alt></p>
+<h4 id="id：执行顺序"><a href="#id：执行顺序" class="headerlink" title="id：执行顺序"></a>id：执行顺序</h4><p>三种情况：</p>
+<ul>
+<li>id相同，执行顺序由上至下</li>
+<li>id不同，如果是子查询，id的序号会递增，id值越大优先级越高，越先被执行</li>
+<li>id相同不同，同时存在</li>
+</ul>
+<h4 id="select-type：查询的类型"><a href="#select-type：查询的类型" class="headerlink" title="select_type：查询的类型"></a>select_type：查询的类型</h4><p><img src="/2017/10/30/MySQL性能分析Explain/20190811135454774.png" alt></p>
+<p>SIMPLE：简单的select查询，查询中不包含子查询或者UNION。</p>
+<p>PRIMARY：查询中包含任何复杂的子部分，最外层查询则被标记为PRIMARY。</p>
+<p>SUBQUERY：在FROM列表中包含的子查询被标记为DERIVED（衍生），MySQL会递归执行这些子查询，把结果放在临时表里。</p>
+<p>DERIVED：在FROM列表中包含的子查询被标记为DERIVED（衍生）。MySQL会递归执行这些子查询，把结果放在临时表里。</p>
+<p>UNION：若第二个SELECT出现在UNION之后，则被标记为UNION；若UNION包含在FROM子句的子查询中，外层SELECT将被标记为：DERIVED。</p>
+<p>UNION RESULT：从UNION表中获取结果的SELECT。</p>
+<h4 id="table：具体哪张表"><a href="#table：具体哪张表" class="headerlink" title="table：具体哪张表"></a>table：具体哪张表</h4><h4 id="type：访问类型（重要）"><a href="#type：访问类型（重要）" class="headerlink" title="type：访问类型（重要）"></a>type：访问类型（重要）</h4><p>从最好到最坏依次是：</p>
+<p>system&gt;const&gt;eq_ref&gt;ref&gt;fulltext&gt;ref_or_null&gt;index_merge&gt;unique_subquery&gt;index_subquery&gt;range&gt;index&gt;All</p>
+<p><img src="/2017/10/30/MySQL性能分析Explain/20190811213254733.png" alt></p>
+<p>显示查询使用了何种类型，从最好到最差依此是：</p>
+<p><strong>system&gt;const&gt;eq_ref&gt;ref&gt;range&gt;index&gt;All</strong></p>
+<p>system：表只有一行记录（等于系统表），这是const类型的特例，平时不会出现，这个也可以忽略不计。</p>
+<p>const：表示通过索引一次就找到了，const用于比较primary key或则unique索引。因为只匹配一行数据，所以很快。如将主键置于where列表中，MySQL就能将该查询转换为一个常量。</p>
+<p>eq_ref：唯一性索引扫描，对于每个索引键，表中只有一条记录与之匹配。常见于主键或唯一索引扫描。</p>
+<p>ref：非唯一性索引扫描，返回匹配某个单独值的所有行。本质上也是一种索引访问，它返回所有匹配某个单独值的行，然而，它可能会找到多个符合条件的行，所以它应该属于查找和扫描的混合体。</p>
+<p>range：只检索给定范围的行，使用一个索引来选择行。key列显示使用了哪个索引。一般就是在你的where语句中出现了between、&lt;、&gt;、in等的查询。这种范围扫描索引扫描比全表扫描要好，因为它只需要开始于索引的某一点，而结束于另一点，不会扫描全部索引。</p>
+<p>index：Full Index Scan，index与All区别为index类型只遍历索引树。这通常比All快，因为索引文件通常比数据文件小。（也就是说虽然all和index都是读全表，但index是从索引中读取的，而all是从硬盘中读的）</p>
+<p>all：Full Table Scan，将遍历全表以找到匹配的行。</p>
+<p>一般来说，<strong>得保证查询至少达到range级别，最好能达到ref</strong>。</p>
+<h4 id="possible-keys"><a href="#possible-keys" class="headerlink" title="possible_keys"></a>possible_keys</h4><p>显示<strong>可能</strong>应用在这张表中的索引，一个或多个。查询涉及到的字段上若存在索引，则该索引将被列出。<strong>但不一定被查询实际使用</strong>。</p>
+<h4 id="key"><a href="#key" class="headerlink" title="key"></a>key</h4><p>实际使用的索引。如果为NULL，则没有使用索引。<strong>查询中若使用了覆盖索引，则该索引仅出现在key列表中，不会出现在possible_keys列表中。</strong>（覆盖索引：查询的字段与建立的复合索引的个数一一吻合）</p>
+<h4 id="key-len"><a href="#key-len" class="headerlink" title="key_len"></a>key_len</h4><p>表示索引中使用的字节数，可通过该列计算查询中使用的索引的长度。在不损失精确性的情况下，长度越短越好。key_len显示的值为索引字段的最大可能长度，<strong>并非实际使用长度</strong>，即key_len是根据表定义计算而得，不是通过表内检索出的。</p>
+<h4 id="ref"><a href="#ref" class="headerlink" title="ref"></a>ref</h4><p>显示索引的哪一列被使用了，如果可能的话，是一个常数。哪些列或常量被用于查找索引列上的值。<strong>查询中与其它表关联的字段，外键关系建立索引</strong>。</p>
+<h4 id="rows"><a href="#rows" class="headerlink" title="rows"></a>rows</h4><p>根据表统计信息及索引选用情况，大致估算出找到所需的记录所需要读取的行数。</p>
+<h4 id="Extra"><a href="#Extra" class="headerlink" title="Extra"></a>Extra</h4><p>包含不适合在其他列中显示但十分重要的额外信息。</p>
+<ul>
+<li><p><strong><em>Using filesort</em></strong>：说明MySQL会对数据使用一个外部的索引排序，而不是按照表内的索引顺序进行读取。MySQL中无法利用索引完成的排序操作成为“文件排序”。</p>
+</li>
+<li><p><strong><em>Using temporary</em></strong>：使用了临时表保存中间结果，MySQL在对查询结果排序时使用临时表。常见于排序<code>order by</code>和分组查询<code>group by</code>。</p>
+</li>
+<li><p><strong><em>Using index</em></strong>：表示相应的select操作中使用了覆盖索引（Covering Index），避免访问了表的数据行，效率不错！如果同时出现<code>using where</code>，表明索引被用来执行索引键值的查找；如果没有同时出现<code>using where</code>，表明索引用来读取数据而非执行查找动作。</p>
+<ul>
+<li>覆盖索引：查询列要被所建的索引覆盖</li>
+</ul>
+</li>
+<li><p><code>Using where</code>：表明使用了where过滤。</p>
+</li>
+<li><p><code>Using join buffer</code>：使用了连接缓存。</p>
+</li>
+<li><p><code>impossible where</code>：where子句的值总是false，不能用来获取任何元组。（查询语句中where的条件不可能被满足，恒为False）</p>
+</li>
+<li><p><code>select tables optimized away</code>：在没有GROUPBY子句的情况下，基于索引优化MIN/MAX操作或者对于MyISAM存储引擎优化COUNT(*)操作，不必等到执行阶段再进行计算，查询执行计划生成的阶段即完成优化。</p>
+</li>
+<li><p><code>distinct</code>：优化distinct操作，在找到第一匹配的元组后即停止找相同值的动作。</p>
+</li>
+</ul>
+<h4 id="热身Case"><a href="#热身Case" class="headerlink" title="热身Case"></a>热身Case</h4><p><img src="/2017/10/30/MySQL性能分析Explain/20190812192639363.png" alt><img src="/2017/10/30/MySQL性能分析Explain/2019081219283684.png" alt></p>
+</div><iframe src="/donate/?AliPayQR=/img/AliPayQR.jpg&amp;WeChatQR=/img/WeChatQR.jpg&amp;GitHub=null&amp;BTCQR=null&amp;BTCKEY=null&amp;PayPal=null" style="overflow-x:hidden; overflow-y:hidden; border:0xp none #fff; min-height:240px; width:100%;" frameborder="0" scrolling="no"></iframe><div class="tags"><a href="/tags/MySQL/">MySQL</a><a href="/tags/索引/">索引</a></div><div class="post-nav"><a class="pre" href="/2017/11/15/MySQL索引优化规则/">MySQL索引优化规则</a><a class="next" href="/2017/10/25/MySQL建立索引/">MySQL建立索引</a></div><div id="vcomment"></div><script src="//cdn1.lncld.net/static/js/3.0.4/av-min.js"></script><script src="//unpkg.com/valine@latest/dist/Valine.min.js"></script><script>var notify = 'false' ? true : false;
+var verify = 'false' ? true : false;
+var GUEST_INFO = ['nick','mail','link'];
+var guest_info = 'nick,mail'.split(',').filter(function(item){
+  return GUEST_INFO.indexOf(item) > -1
+});
+guest_info = guest_info.length == 0 ? GUEST_INFO :guest_info;
+window.valine = new Valine({
+  el:'#vcomment',
+  notify:notify,
+  verify:verify,
+  appId:'J60udJGFQdp0b1VIu2GllAkN-gzGzoHsz',
+  appKey:'ymPF38rxq6xmzdceDNs1sPHE',
+  placeholder:'来啊，快评论交流一下吧!',
+  avatar:'',
+  guest_info:guest_info,
+  pageSize:'10'
+})</script></div></div></div><div class="pure-u-1-4 hidden_mid_and_down"><div id="sidebar"><div class="widget"><div class="search-form"><input id="local-search-input" placeholder="Search" type="text" name="q" results="0"><div id="local-search-result"></div></div></div><div class="widget"><div class="widget-title"><i class="fa fa-folder-o"> 分类</i></div><ul class="category-list"><li class="category-list-item"><a class="category-list-link" href="/categories/ElasticSearch/">ElasticSearch</a><span class="category-list-count">5</span></li><li class="category-list-item"><a class="category-list-link" href="/categories/MySQL/">MySQL</a><span class="category-list-count">9</span></li><li class="category-list-item"><a class="category-list-link" href="/categories/Redis/">Redis</a><span class="category-list-count">8</span></li><li class="category-list-item"><a class="category-list-link" href="/categories/Spring/">Spring</a><span class="category-list-count">1</span></li><li class="category-list-item"><a class="category-list-link" href="/categories/Spring-Boot初级/">Spring Boot初级</a><span class="category-list-count">8</span></li><li class="category-list-item"><a class="category-list-link" href="/categories/Spring-Boot高级/">Spring Boot高级</a><span class="category-list-count">8</span></li><li class="category-list-item"><a class="category-list-link" href="/categories/多线程/">多线程</a><span class="category-list-count">4</span></li></ul></div><div class="widget"><div class="widget-title"><i class="fa fa-star-o"> 标签</i></div><div class="tagcloud"><a href="/tags/异步/" style="font-size: 15px;">异步</a> <a href="/tags/搜索引擎/" style="font-size: 15px;">搜索引擎</a> <a href="/tags/Kibana/" style="font-size: 15px;">Kibana</a> <a href="/tags/ik分词器/" style="font-size: 15px;">ik分词器</a> <a href="/tags/Hexo/" style="font-size: 15px;">Hexo</a> <a href="/tags/Redis/" style="font-size: 15px;">Redis</a> <a href="/tags/MySQL/" style="font-size: 15px;">MySQL</a> <a href="/tags/索引/" style="font-size: 15px;">索引</a> <a href="/tags/慢查询/" style="font-size: 15px;">慢查询</a> <a href="/tags/反向代理/" style="font-size: 15px;">反向代理</a> <a href="/tags/Nginx/" style="font-size: 15px;">Nginx</a> <a href="/tags/锁/" style="font-size: 15px;">锁</a> <a href="/tags/Spring-Boot/" style="font-size: 15px;">Spring Boot</a> <a href="/tags/Dubbo/" style="font-size: 15px;">Dubbo</a> <a href="/tags/Zookeeper/" style="font-size: 15px;">Zookeeper</a> <a href="/tags/Eureka/" style="font-size: 15px;">Eureka</a> <a href="/tags/Spring-Cloud/" style="font-size: 15px;">Spring Cloud</a> <a href="/tags/ElasticSearch/" style="font-size: 15px;">ElasticSearch</a> <a href="/tags/邮件/" style="font-size: 15px;">邮件</a> <a href="/tags/安全/" style="font-size: 15px;">安全</a> <a href="/tags/Spring-Security/" style="font-size: 15px;">Spring Security</a> <a href="/tags/消息队列/" style="font-size: 15px;">消息队列</a> <a href="/tags/RabbitMQ/" style="font-size: 15px;">RabbitMQ</a> <a href="/tags/热部署/" style="font-size: 15px;">热部署</a> <a href="/tags/监管/" style="font-size: 15px;">监管</a> <a href="/tags/缓存/" style="font-size: 15px;">缓存</a> <a href="/tags/Spring-Data-ElasticSearch/" style="font-size: 15px;">Spring Data ElasticSearch</a> <a href="/tags/Thymeleaf/" style="font-size: 15px;">Thymeleaf</a> <a href="/tags/页面静态化/" style="font-size: 15px;">页面静态化</a> <a href="/tags/面试题/" style="font-size: 15px;">面试题</a> <a href="/tags/多线程/" style="font-size: 15px;">多线程</a> <a href="/tags/数据校验/" style="font-size: 15px;">数据校验</a> <a href="/tags/Hibernate-Validator/" style="font-size: 15px;">Hibernate Validator</a> <a href="/tags/跨域问题/" style="font-size: 15px;">跨域问题</a> <a href="/tags/Spring/" style="font-size: 15px;">Spring</a></div></div><div class="widget"><div class="widget-title"><i class="fa fa-file-o"> 最近文章</i></div><ul class="post-list"><li class="post-list-item"><a class="post-list-link" href="/2019/09/22/MySQL锁机制/">MySQL锁机制</a></li><li class="post-list-item"><a class="post-list-link" href="/2019/09/22/MySQL使用Show-Profile进行调优/">MySQL使用Show Profile进行调优</a></li><li class="post-list-item"><a class="post-list-link" href="/2019/09/22/MySQL如何开启慢查询日志/">MySQL如何开启慢查询日志</a></li><li class="post-list-item"><a class="post-list-link" href="/2019/09/22/MySQL查询优化规则/">MySQL查询优化规则</a></li><li class="post-list-item"><a class="post-list-link" href="/2019/05/21/Spring-Data-ElasticSearch/">Spring Data ElasticSearch</a></li><li class="post-list-item"><a class="post-list-link" href="/2019/04/05/ElasticSearch-Rest风格API/">ElasticSearch Rest风格API</a></li><li class="post-list-item"><a class="post-list-link" href="/2019/03/29/ElasticSearch插件ik分词器/">ElasticSearch插件ik分词器</a></li><li class="post-list-item"><a class="post-list-link" href="/2019/03/25/ElasticSearch可视化工具Kibana/">ElasticSearch可视化工具Kibana</a></li><li class="post-list-item"><a class="post-list-link" href="/2019/03/22/ElasticSearch的介绍和安装/">ElasticSearch的介绍和安装</a></li><li class="post-list-item"><a class="post-list-link" href="/2018/10/25/Thymeleaf实现页面静态化/">Thymeleaf实现页面静态化</a></li></ul></div><div class="widget"><div class="widget-title"><i class="fa fa-external-link"> 友情链接</i></div><ul></ul><a href="https://www.zhongmin.cn" title="中民保险网" target="_blank">中民保险网</a><ul></ul><a href="https://www.lingju.ai/index" title="灵聚智能" target="_blank">灵聚智能</a></div></div></div><div class="pure-u-1 pure-u-md-3-4"><div id="footer">Copyright © 2019 <a href="/." rel="nofollow">Vic.</a> Powered by<a rel="nofollow" target="_blank" href="https://hexo.io"> Hexo.</a><a rel="nofollow" target="_blank" href="https://github.com/tufu9441/maupassant-hexo"> Theme</a> by<a rel="nofollow" target="_blank" href="https://github.com/pagecho"> Cho.</a></div></div></div><a class="show" id="rocket" href="#top"></a><script type="text/javascript" src="/js/totop.js?v=0.0.0" async></script><script type="text/javascript" src="//lib.baomitu.com/fancybox/3.5.7/jquery.fancybox.min.js" async></script><script type="text/javascript" src="/js/fancybox.js?v=0.0.0" async></script><link rel="stylesheet" type="text/css" href="//lib.baomitu.com/fancybox/3.5.7/jquery.fancybox.min.css"><script type="text/javascript" src="/js/search.js?v=0.0.0"></script><script>var search_path = 'search.xml';
+if (search_path.length == 0) {
+   search_path = 'search.xml';
+}
+var path = '/' + search_path;
+searchFunc(path, 'local-search-input', 'local-search-result');
+</script><script type="text/javascript" src="/js/codeblock-resizer.js?v=0.0.0"></script><script type="text/javascript" src="/js/smartresize.js?v=0.0.0"></script></div></body></html>
