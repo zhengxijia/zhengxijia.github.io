@@ -258,9 +258,9 @@
       
         <tags>
             
-            <tag> 搜索引擎 </tag>
-            
             <tag> ElasticSearch </tag>
+            
+            <tag> 搜索引擎 </tag>
             
         </tags>
       
@@ -339,9 +339,9 @@
       
         <tags>
             
-            <tag> 搜索引擎 </tag>
-            
             <tag> ElasticSearch </tag>
+            
+            <tag> 搜索引擎 </tag>
             
         </tags>
       
@@ -381,7 +381,11 @@
       
         <tags>
             
-            <tag> 登录，JWT，RSA </tag>
+            <tag> 登录 </tag>
+            
+            <tag> JWT </tag>
+            
+            <tag> RSA </tag>
             
         </tags>
       
@@ -612,9 +616,9 @@
       
         <tags>
             
-            <tag> 搜索引擎 </tag>
-            
             <tag> ElasticSearch </tag>
+            
+            <tag> 搜索引擎 </tag>
             
             <tag> Spring Boot </tag>
             
