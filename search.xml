@@ -137,7 +137,11 @@
       
         <tags>
             
-            <tag> 负载均衡，远程调用，Fegin </tag>
+            <tag> 负载均衡 </tag>
+            
+            <tag> 远程调用 </tag>
+            
+            <tag> Fegin </tag>
             
         </tags>
       
@@ -162,7 +166,11 @@
       
         <tags>
             
-            <tag> 负载均衡，远程调用，Ribbon </tag>
+            <tag> 负载均衡 </tag>
+            
+            <tag> 远程调用 </tag>
+            
+            <tag> Ribbon </tag>
             
         </tags>
       
@@ -258,9 +266,9 @@
       
         <tags>
             
-            <tag> ElasticSearch </tag>
-            
             <tag> 搜索引擎 </tag>
+            
+            <tag> ElasticSearch </tag>
             
         </tags>
       
@@ -339,9 +347,9 @@
       
         <tags>
             
-            <tag> ElasticSearch </tag>
-            
             <tag> 搜索引擎 </tag>
+            
+            <tag> ElasticSearch </tag>
             
         </tags>
       
@@ -616,9 +624,9 @@
       
         <tags>
             
-            <tag> ElasticSearch </tag>
-            
             <tag> 搜索引擎 </tag>
+            
+            <tag> ElasticSearch </tag>
             
             <tag> Spring Boot </tag>
             
