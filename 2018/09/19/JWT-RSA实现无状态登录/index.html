@@ -1,83 +1,73 @@
-<!DOCTYPE html><html lang="zh-CN"><head><meta name="generator" content="Hexo 3.9.0"><meta http-equiv="content-type" content="text/html; charset=utf-8"><meta content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=0" name="viewport"><meta content="yes" name="apple-mobile-web-app-capable"><meta content="black-translucent" name="apple-mobile-web-app-status-bar-style"><meta content="telephone=no" name="format-detection"><meta name="description"><title>JWT+RSA实现无状态登录 | Vic</title><link rel="stylesheet" type="text/css" href="/css/style.css?v=0.0.0"><link rel="stylesheet" type="text/css" href="//lib.baomitu.com/normalize/8.0.1/normalize.min.css"><link rel="stylesheet" type="text/css" href="//lib.baomitu.com/pure/1.0.0/pure-min.css"><link rel="stylesheet" type="text/css" href="//lib.baomitu.com/pure/1.0.0/grids-responsive-min.css"><link rel="stylesheet" href="//lib.baomitu.com/font-awesome/4.7.0/css/font-awesome.min.css"><script type="text/javascript" src="//lib.baomitu.com/jquery/3.4.0/jquery.min.js"></script><link rel="icon" mask sizes="any" href="/favicon.ico"><link rel="Shortcut Icon" type="image/x-icon" href="/favicon.ico"><link rel="apple-touch-icon" href="/apple-touch-icon.png"><link rel="apple-touch-icon-precomposed" href="/apple-touch-icon.png"></head><body><div class="body_container"><div id="header"><div class="site-name"><h1 class="hidden">JWT+RSA实现无状态登录</h1><a id="logo" href="/.">Vic</a><p class="description">Simon,I just don't know</p></div><div id="nav-menu"><a class="current" href="/."><i class="fa fa-home"> 首页</i></a><a href="/archives/"><i class="fa fa-archive"> 归档</i></a><a href="/about/"><i class="fa fa-user"> 关于</i></a><a href="/comments/"><i class="fa fa-comments"> 留言</i></a><a href="/atom.xml"><i class="fa fa-rss"> 订阅</i></a></div></div><div class="pure-g" id="layout"><div class="pure-u-1 pure-u-md-3-4"><div class="content_container"><div class="post"><h1 class="post-title">JWT+RSA实现无状态登录</h1><div class="post-meta">Sep 19, 2018<script src="https://busuanzi.ibruce.info/busuanzi/2.3/busuanzi.pure.mini.js" async></script><span id="busuanzi_container_page_pv"> | <span id="busuanzi_value_page_pv"></span><span> 阅读</span></span></div><a class="disqus-comment-count" href="/2018/09/19/JWT-RSA实现无状态登录/#vcomment"><span class="valine-comment-count" data-xid="/2018/09/19/JWT-RSA实现无状态登录/"></span><span> 条评论</span></a><div class="clear"><div class="toc-article" id="toc"><div class="toc-title">文章目录</div><ol class="toc"><li class="toc-item toc-level-2"><a class="toc-link" href="#什么是有状态？"><span class="toc-number">1.</span> <span class="toc-text">什么是有状态？</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#什么是无状态"><span class="toc-number">2.</span> <span class="toc-text">什么是无状态</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#如何实现无状态"><span class="toc-number">3.</span> <span class="toc-text">如何实现无状态</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#JWT"><span class="toc-number">4.</span> <span class="toc-text">JWT</span></a><ol class="toc-child"><li class="toc-item toc-level-3"><a class="toc-link" href="#简介"><span class="toc-number">4.1.</span> <span class="toc-text">简介</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#数据格式"><span class="toc-number">4.2.</span> <span class="toc-text">数据格式</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#JWT交互流程"><span class="toc-number">4.3.</span> <span class="toc-text">JWT交互流程</span></a></li></ol></li><li class="toc-item toc-level-2"><a class="toc-link" href="#非对称加密"><span class="toc-number">5.</span> <span class="toc-text">非对称加密</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#结合Zuul的鉴权流程"><span class="toc-number">6.</span> <span class="toc-text">结合Zuul的鉴权流程</span></a><ol class="toc-child"><li class="toc-item toc-level-3"><a class="toc-link" href="#没有RSA加密时"><span class="toc-number">6.1.</span> <span class="toc-text">没有RSA加密时</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#结合RSA的鉴权"><span class="toc-number">6.2.</span> <span class="toc-text">结合RSA的鉴权</span></a></li></ol></li></ol></div></div><div class="post-content"><h2 id="什么是有状态？"><a href="#什么是有状态？" class="headerlink" title="什么是有状态？"></a>什么是有状态？</h2><p>有状态服务，即服务端需要记录每次会话的客户端信息，从而识别客户端身份，根据用户身份进行请求的处理，典型的设计如tomcat中的session。</p>
-<p>例如登录：用户登录后，我们把登录者的信息保存在服务端session中，并且给用户一个cookie值，记录对应的session。然后下次请求，用户携带cookie值来，我们就能识别到对应session，从而找到用户的信息。</p>
-<p>缺点是什么？</p>
+<!DOCTYPE html><html lang="zh-CN"><head><meta name="generator" content="Hexo 3.9.0"><meta http-equiv="content-type" content="text/html; charset=utf-8"><meta content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=0" name="viewport"><meta content="yes" name="apple-mobile-web-app-capable"><meta content="black-translucent" name="apple-mobile-web-app-status-bar-style"><meta content="telephone=no" name="format-detection"><meta name="description"><title>JWT+RSA实现无状态登录 | Vic</title><link rel="stylesheet" type="text/css" href="/css/style.css?v=0.0.0"><link rel="stylesheet" type="text/css" href="//lib.baomitu.com/normalize/8.0.1/normalize.min.css"><link rel="stylesheet" type="text/css" href="//lib.baomitu.com/pure/1.0.0/pure-min.css"><link rel="stylesheet" type="text/css" href="//lib.baomitu.com/pure/1.0.0/grids-responsive-min.css"><link rel="stylesheet" href="//lib.baomitu.com/font-awesome/4.7.0/css/font-awesome.min.css"><script type="text/javascript" src="//lib.baomitu.com/jquery/3.4.0/jquery.min.js"></script><link rel="icon" mask sizes="any" href="/favicon.ico"><link rel="Shortcut Icon" type="image/x-icon" href="/favicon.ico"><link rel="apple-touch-icon" href="/apple-touch-icon.png"><link rel="apple-touch-icon-precomposed" href="/apple-touch-icon.png"></head><body><div class="body_container"><div id="header"><div class="site-name"><h1 class="hidden">JWT+RSA实现无状态登录</h1><a id="logo" href="/.">Vic</a><p class="description">Simon,I just don't know</p></div><div id="nav-menu"><a class="current" href="/."><i class="fa fa-home"> 首页</i></a><a href="/archives/"><i class="fa fa-archive"> 归档</i></a><a href="/about/"><i class="fa fa-user"> 关于</i></a><a href="/comments/"><i class="fa fa-comments"> 留言</i></a><a href="/atom.xml"><i class="fa fa-rss"> 订阅</i></a></div></div><div class="pure-g" id="layout"><div class="pure-u-1 pure-u-md-3-4"><div class="content_container"><div class="post"><h1 class="post-title">JWT+RSA实现无状态登录</h1><div class="post-meta">Sep 19, 2018<script src="https://busuanzi.ibruce.info/busuanzi/2.3/busuanzi.pure.mini.js" async></script><span id="busuanzi_container_page_pv"> | <span id="busuanzi_value_page_pv"></span><span> 阅读</span></span></div><a class="disqus-comment-count" href="/2018/09/19/JWT-RSA实现无状态登录/#vcomment"><span class="valine-comment-count" data-xid="/2018/09/19/JWT-RSA实现无状态登录/"></span><span> 条评论</span></a><div class="clear"><div class="toc-article" id="toc"><div class="toc-title">文章目录</div><ol class="toc"><li class="toc-item toc-level-2"><a class="toc-link" href="#前言"><span class="toc-number">1.</span> <span class="toc-text">前言</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#实现思路"><span class="toc-number">2.</span> <span class="toc-text">实现思路</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#JWT-RSA"><span class="toc-number">3.</span> <span class="toc-text">JWT+RSA</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#结合Zuul的鉴权流程"><span class="toc-number">4.</span> <span class="toc-text">结合Zuul的鉴权流程</span></a><ol class="toc-child"><li class="toc-item toc-level-3"><a class="toc-link" href="#没有RSA加密时"><span class="toc-number">4.1.</span> <span class="toc-text">没有RSA加密时</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#结合RSA的鉴权"><span class="toc-number">4.2.</span> <span class="toc-text">结合RSA的鉴权</span></a></li></ol></li></ol></div></div><div class="post-content"><h2 id="前言"><a href="#前言" class="headerlink" title="前言"></a>前言</h2><p>介绍<code>JWT</code>和<code>RSA</code>之前，首先先区分一下用户有状态登录和无状态登录。</p>
 <ul>
+<li><p>有状态登录：即服务器端需要<strong>记录</strong>每次会话中的登录态信息，之后根据用户携带的登录态信息与服务器端的登录态信息，从而识别用户的登录态，例如<code>cookie</code>+<code>session</code>，<code>token</code>+<code>redis</code>等</p>
+<p>缺点：</p>
+<ol>
 <li>服务端保存大量数据，增加服务端压力</li>
 <li>服务端保存用户状态，无法进行水平扩展</li>
-<li>客户端请求依赖服务端，多次请求必须访问同一台服务器</li>
-</ul>
-<h2 id="什么是无状态"><a href="#什么是无状态" class="headerlink" title="什么是无状态"></a>什么是无状态</h2><p>微服务集群中的每个服务，对外提供的都是Rest风格的接口。而Rest风格的一个最重要的规范就是：服务的无状态性，即：</p>
-<ul>
-<li>服务端不保存任何客户端请求者信息</li>
-<li>客户端的每次请求必须具备自描述信息，通过这些信息识别客户端身份</li>
-</ul>
-<p>带来的好处是什么呢？</p>
-<ul>
-<li>客户端请求不依赖服务端的信息，任何多次请求不需要必须访问到同一台服务</li>
-<li>服务端的集群和状态对客户端透明</li>
-<li>服务端可以任意的迁移和伸缩</li>
+<li>客户端请求依赖服务端，多次请求必须访问同一台服务器（<code>cookie</code>+<code>session</code>）</li>
+</ol>
+</li>
+<li><p>无状态登录：即服务器端无需记录任何客户端信息，之后根据用户请求携带的登录态信息，从而识别用户的登录态，例如以下将要讲解的<code>JWT</code></p>
+<p>优点：</p>
+<ol>
 <li>减小服务端存储压力</li>
+<li>服务端可以任意的迁移和伸缩</li>
+<li>客户端请求不依赖服务端的信息，任何多次请求不需要必须访问到同一台服务</li>
+</ol>
+</li>
 </ul>
-<h2 id="如何实现无状态"><a href="#如何实现无状态" class="headerlink" title="如何实现无状态"></a>如何实现无状态</h2><p>无状态登录的流程：</p>
+<h2 id="实现思路"><a href="#实现思路" class="headerlink" title="实现思路"></a>实现思路</h2><p><img src="/2018/09/19/JWT-RSA实现无状态登录/1527300483893.png" alt></p>
+<p>流程详解：</p>
+<ol>
+<li>当客户端第一次请求服务时，授权中心对用户进行信息认证（登录）</li>
+<li>认证通过，将用户信息进行<code>加密</code>形成<code>token</code>，返回给客户端，作为<code>登录凭证</code></li>
+<li>之后的每次请求，客户端都携带认证的<code>token</code></li>
+<li>服务端对<code>token</code>进行解密，判断<code>登录凭证</code>是否有效。</li>
+</ol>
+<p>上面整个无状态登录最关键的是，需要保证<strong>token的安全性</strong>，因为token是识别客户端信息的唯一标识，如果被人伪造的话，整个系统相当在裸奔了~</p>
+<p>所以下面将介绍一种可以保证token安全性的机制：<code>JWT + RSA</code></p>
+<h2 id="JWT-RSA"><a href="#JWT-RSA" class="headerlink" title="JWT+RSA"></a>JWT+RSA</h2><p>首先先说下<code>JWT</code>，即<code>Json Web Token</code>， 是一种可以实现<code>无状态</code>、<code>分布式</code>的<code>json</code>风格<code>轻量级</code>的授权和身份认证规范。</p>
 <ul>
-<li>当客户端第一次请求服务时，服务端对用户进行信息认证（登录）</li>
-<li>认证通过，将用户信息进行加密形成token，返回给客户端，作为登录凭证</li>
-<li>以后每次请求，客户端都携带认证的token</li>
-<li>服务的对token进行解密，判断是否有效。</li>
+<li><p><code>JWT</code>官网：<a href="https://jwt.io" target="_blank" rel="noopener">https://jwt.io</a></p>
+</li>
+<li><p><code>GitHub</code>上的<code>java</code>客户端<code>jjwt</code>：<a href="https://github.com/jwtk/jjwt" target="_blank" rel="noopener">https://github.com/jwtk/jjwt</a></p>
+</li>
 </ul>
-<p>流程图：</p>
-<p><img src="/2018/09/19/JWT-RSA实现无状态登录/1527300483893.png" alt></p>
-<p>整个登录过程中，最关键的点是什么？</p>
-<p><strong>token的安全性</strong></p>
-<p>token是识别客户端身份的唯一标示，如果加密不够严密，被人伪造那就完蛋了。</p>
-<p>采用何种方式加密才是安全可靠的呢？</p>
-<p>我们将采用<code>JWT + RSA非对称加密</code></p>
-<h2 id="JWT"><a href="#JWT" class="headerlink" title="JWT"></a>JWT</h2><h3 id="简介"><a href="#简介" class="headerlink" title="简介"></a>简介</h3><p>JWT，全称是Json Web Token， 是JSON风格轻量级的授权和身份认证规范，可实现无状态、分布式的Web应用授权；官网：<a href="https://jwt.io" target="_blank" rel="noopener">https://jwt.io</a></p>
-<p><img src="/2018/09/19/JWT-RSA实现无状态登录/1527301027008.png" alt></p>
-<p>GitHub上jwt的java客户端：<a href="https://github.com/jwtk/jjwt" target="_blank" rel="noopener">https://github.com/jwtk/jjwt</a></p>
-<h3 id="数据格式"><a href="#数据格式" class="headerlink" title="数据格式"></a>数据格式</h3><p>JWT包含三部分数据：</p>
-<ul>
-<li><p>Header：头部，通常头部有两部分信息：</p>
+<p>然后再来看看<code>JWT</code>是如何组成的</p>
+<p><img src="/2018/09/19/JWT-RSA实现无状态登录/1527322512370.png" alt></p>
+<p><code>Header</code>：头部，一般进行<code>base64</code>加密（可解密），得到第一部分数据</p>
 <ul>
 <li>声明类型，这里是JWT</li>
 <li>加密算法，自定义</li>
 </ul>
-<p>我们会对头部进行base64加密（可解密），得到第一部分数据</p>
-</li>
-<li><p>Payload：载荷，就是有效数据，一般包含下面信息：</p>
+<p><code>Payload</code>：载荷，也会采用<code>base64</code>加密，得到第二部分数据</p>
 <ul>
-<li>用户身份信息（注意，这里因为采用base64加密，可解密，因此不要存放敏感信息）</li>
+<li>用户身份信息（注意，这里因为采用<code>base64</code>加密，可解密，因此<code>不要</code>存放敏感信息）</li>
 <li>注册声明：如token的签发时间，过期时间，签发人等</li>
 </ul>
-<p>这部分也会采用base64加密，得到第二部分数据</p>
-</li>
-<li><p>Signature：签名，是整个数据的认证信息。一般根据前两步的数据，再加上服务的的密钥（secret）（不要泄漏，最好周期性更换），通过加密算法生成。用于验证整个数据完整和可靠性</p>
-</li>
-</ul>
-<p>生成的数据格式：</p>
-<p><img src="/2018/09/19/JWT-RSA实现无状态登录/1527322512370.png" alt></p>
-<p>可以看到分为3段，每段就是上面的一部分数据</p>
-<h3 id="JWT交互流程"><a href="#JWT交互流程" class="headerlink" title="JWT交互流程"></a>JWT交互流程</h3><p>流程图：</p>
+<p><code>Signature</code>：签名，是整个数据的认证信息。一般根据前两步的数据，再加上服务的的密钥<code>secret</code>（不要泄漏，最好周期性更换），通过加密算法生成。用于验证整个数据完整和可靠性</p>
+<p>接下来说说<code>JWT</code>交互流程图：</p>
 <p><img src="/2018/09/19/JWT-RSA实现无状态登录/1527305891424.png" alt></p>
-<p>步骤翻译：</p>
+<p>流程详解：</p>
+<ol>
+<li>用户登录</li>
+<li>服务的认证，通过后根据<code>secret</code>生成<code>token</code></li>
+<li>将生成的<code>token</code>返回给用户</li>
+<li>用户每次请求携带<code>token</code></li>
+<li>服务端利用公钥解读<code>jwt</code>签名，判断签名有效后，从<code>Payload</code>中获取用户信息</li>
+<li>处理请求，返回响应结果</li>
+</ol>
+<p><code>JWT</code>签发的<code>token</code>中包含了用户的身份信息，并且每次请求都会携带，这样服务的就无需保存用户信息，甚至无需去数据库查询，完全符合了<code>Rest</code>的无状态规范。</p>
+<p>接下来说说加密算法，一般分为三类：</p>
 <ul>
-<li>1、用户登录</li>
-<li>2、服务的认证，通过后根据secret生成token</li>
-<li>3、将生成的token返回给用户</li>
-<li>4、用户每次请求携带token</li>
-<li>5、服务端利用公钥解读jwt签名，判断签名有效后，从Payload中获取用户信息</li>
-<li>6、处理请求，返回响应结果</li>
-</ul>
-<p>因为JWT签发的token中已经包含了用户的身份信息，并且每次请求都会携带，这样服务的就无需保存用户信息，甚至无需去数据库查询，完全符合了Rest的无状态规范。</p>
-<h2 id="非对称加密"><a href="#非对称加密" class="headerlink" title="非对称加密"></a>非对称加密</h2><p>加密技术是对信息进行编码和解码的技术，编码是把原来可读信息（又称明文）译成代码形式（又称密文），其逆过程就是解码（解密），加密技术的要点是加密算法，加密算法可以分为三类：  </p>
-<ul>
-<li>对称加密，如AES<ul>
+<li>对称加密，如<code>AES</code><ul>
 <li>基本原理：将明文分成N个组，然后使用密钥对各个组进行加密，形成各自的密文，最后把所有的分组密文进行合并，形成最终的密文。</li>
-<li>优势：算法公开、计算量小、加密速度快、加密效率高</li>
-<li>缺陷：双方都使用同样密钥，安全性得不到保证 </li>
+<li>优点：算法公开、计算量小、加密速度快、加密效率高</li>
+<li>缺点：双方都使用同样密钥，安全性得不到保证 </li>
 </ul>
 </li>
-<li>非对称加密，如RSA<ul>
+<li>非对称加密，如<code>RSA</code><ul>
 <li>基本原理：同时生成两把密钥：私钥和公钥，私钥隐秘保存，公钥可以下发给信任客户端<ul>
 <li>私钥加密，持有私钥或公钥才可以解密</li>
 <li>公钥加密，持有私钥才可解密</li>
@@ -87,39 +77,38 @@
 <li>缺点：算法比较耗时</li>
 </ul>
 </li>
-<li>不可逆加密，如MD5，SHA<ul>
+<li>不可逆加密，如<code>MD5</code>，<code>SHA</code><ul>
 <li>基本原理：加密过程中不需要使用<a href="https://baike.baidu.com/item/%E5%AF%86%E9%92%A5" target="_blank" rel="noopener">密钥</a>，输入明文后由系统直接经过加密算法处理成密文，这种加密后的数据是无法被解密的，无法根据密文推算出明文。</li>
 </ul>
 </li>
 </ul>
-<p>RSA算法历史：</p>
-<p>1977年，三位数学家Rivest、Shamir 和 Adleman 设计了一种算法，可以实现非对称加密。这种算法用他们三个人的名字缩写：RSA</p>
-<h2 id="结合Zuul的鉴权流程"><a href="#结合Zuul的鉴权流程" class="headerlink" title="结合Zuul的鉴权流程"></a>结合Zuul的鉴权流程</h2><p>需要注意的是：secret是签名的关键，因此一定要保密，我们放到鉴权中心保存，其它任何服务中都不能获取secret。</p>
-<h3 id="没有RSA加密时"><a href="#没有RSA加密时" class="headerlink" title="没有RSA加密时"></a>没有RSA加密时</h3><p>在微服务架构中，我们可以把服务的鉴权操作放到网关中，将未通过鉴权的请求直接拦截，如图：</p>
-<p><img src="/2018/09/19/JWT-RSA实现无状态登录/1527312464328.png" alt></p>
-<ul>
-<li>1、用户请求登录</li>
-<li>2、Zuul将请求转发到授权中心，请求授权</li>
-<li>3、授权中心校验完成，颁发JWT凭证</li>
-<li>4、客户端请求其它功能，携带JWT</li>
-<li>5、Zuul将jwt交给授权中心校验，通过后放行</li>
-<li>6、用户请求到达微服务</li>
-<li>7、微服务将jwt交给鉴权中心，鉴权同时解析用户信息</li>
-<li>8、鉴权中心返回用户数据给微服务</li>
-<li>9、微服务处理请求，返回响应</li>
-</ul>
-<p>发现什么问题了？</p>
+<h2 id="结合Zuul的鉴权流程"><a href="#结合Zuul的鉴权流程" class="headerlink" title="结合Zuul的鉴权流程"></a>结合Zuul的鉴权流程</h2><h3 id="没有RSA加密时"><a href="#没有RSA加密时" class="headerlink" title="没有RSA加密时"></a>没有RSA加密时</h3><p><img src="/2018/09/19/JWT-RSA实现无状态登录/1527312464328.png" alt></p>
+<p>流程详解：</p>
+<ol>
+<li>用户请求登录</li>
+<li><code>Zuul</code>将请求转发到授权中心，请求授权</li>
+<li>授权中心校验完成，颁发<code>JWT凭证</code></li>
+<li>客户端请求其它功能，携带<code>JWT</code></li>
+<li><code>Zuul</code>将<code>JWT</code>交给授权中心校验，通过后放行</li>
+<li>用户请求到达微服务</li>
+<li>微服务将<code>JWT</code>交给鉴权中心，鉴权同时解析用户信息</li>
+<li>鉴权中心返回用户数据给微服务</li>
+<li>微服务处理请求，返回响应</li>
+</ol>
+<p>上面的流程发现了什么问题？？？</p>
 <p>每次鉴权都需要访问鉴权中心，系统间的网络请求频率过高，效率略差，鉴权中心的压力较大。</p>
 <h3 id="结合RSA的鉴权"><a href="#结合RSA的鉴权" class="headerlink" title="结合RSA的鉴权"></a>结合RSA的鉴权</h3><p><img src="/2018/09/19/JWT-RSA实现无状态登录/1527313765010.png" alt></p>
-<ul>
-<li>我们首先利用RSA生成公钥和私钥。私钥保存在授权中心，公钥保存在Zuul和各个微服务</li>
+<ol>
+<li>首先利用<code>RSA</code>生成<code>公钥</code>和<code>私钥</code>（私钥保存在授权中心，公钥保存在<code>Zuul</code>和各个微服务）</li>
 <li>用户请求登录</li>
-<li>授权中心校验，通过后用私钥对JWT进行签名加密</li>
-<li>返回jwt给用户</li>
-<li>用户携带JWT访问</li>
-<li>Zuul直接通过公钥解密JWT，进行验证，验证通过则放行</li>
-<li>请求到达微服务，微服务直接用公钥解析JWT，获取用户信息，无需访问授权中心</li>
-</ul>
+<li>授权中心校验，通过后用<code>私钥</code>对<code>JWT</code>进行签名加密</li>
+<li>返回<code>JWT</code>给用户</li>
+<li>用户携带<code>JWT</code>访问</li>
+<li><code>Zuul</code>直接通过<code>公钥</code>解密<code>JWT</code>，进行验证，验证通过则放行</li>
+<li>请求到达微服务，微服务直接用公钥解析<code>JWT</code>，获取用户信息，无需访问授权中心</li>
+</ol>
+<p><strong>特别注意</strong>：</p>
+<p>私钥<code>secret</code>是签名的关键，因此一定要保密，我们放到鉴权中心保存，其它任何服务中都不能获取私钥<code>secret</code></p>
 <p>服务暴露的问题？</p>
 <p>避免被暴露</p>
 <p>jwt服务间鉴权</p>
@@ -140,7 +129,7 @@ window.valine = new Valine({
   avatar:'',
   guest_info:guest_info,
   pageSize:'10'
-})</script></div></div></div><div class="pure-u-1-4 hidden_mid_and_down"><div id="sidebar"><div class="widget"><div class="search-form"><input id="local-search-input" placeholder="Search" type="text" name="q" results="0"><div id="local-search-result"></div></div></div><div class="widget"><div class="widget-title"><i class="fa fa-folder-o"> 分类</i></div><ul class="category-list"><li class="category-list-item"><a class="category-list-link" href="/categories/ElasticSearch/">ElasticSearch</a><span class="category-list-count">5</span></li><li class="category-list-item"><a class="category-list-link" href="/categories/Java基础/">Java基础</a><span class="category-list-count">1</span></li><li class="category-list-item"><a class="category-list-link" href="/categories/MySQL/">MySQL</a><span class="category-list-count">10</span></li><li class="category-list-item"><a class="category-list-link" href="/categories/Redis/">Redis</a><span class="category-list-count">7</span></li><li class="category-list-item"><a class="category-list-link" href="/categories/Spring/">Spring</a><span class="category-list-count">1</span></li><li class="category-list-item"><a class="category-list-link" href="/categories/Spring-Boot初级/">Spring Boot初级</a><span class="category-list-count">8</span></li><li class="category-list-item"><a class="category-list-link" href="/categories/Spring-Boot高级/">Spring Boot高级</a><span class="category-list-count">8</span></li><li class="category-list-item"><a class="category-list-link" href="/categories/Spring-Cloud/">Spring Cloud</a><span class="category-list-count">9</span></li><li class="category-list-item"><a class="category-list-link" href="/categories/多线程/">多线程</a><span class="category-list-count">4</span></li><li class="category-list-item"><a class="category-list-link" href="/categories/源码分析/">源码分析</a><span class="category-list-count">2</span></li><li class="category-list-item"><a class="category-list-link" href="/categories/设计模式/">设计模式</a><span class="category-list-count">1</span></li></ul></div><div class="widget"><div class="widget-title"><i class="fa fa-star-o"> 标签</i></div><div class="tagcloud"><a href="/tags/邮件/" style="font-size: 15px;">邮件</a> <a href="/tags/搜索引擎/" style="font-size: 15px;">搜索引擎</a> <a href="/tags/ik分词器/" style="font-size: 15px;">ik分词器</a> <a href="/tags/Kibana/" style="font-size: 15px;">Kibana</a> <a href="/tags/负载均衡/" style="font-size: 15px;">负载均衡</a> <a href="/tags/远程调用/" style="font-size: 15px;">远程调用</a> <a href="/tags/Fegin/" style="font-size: 15px;">Fegin</a> <a href="/tags/Hexo/" style="font-size: 15px;">Hexo</a> <a href="/tags/负载均衡，远程调用，Ribbon/" style="font-size: 15px;">负载均衡，远程调用，Ribbon</a> <a href="/tags/Hystrix/" style="font-size: 15px;">Hystrix</a> <a href="/tags/登录/" style="font-size: 15px;">登录</a> <a href="/tags/JWT/" style="font-size: 15px;">JWT</a> <a href="/tags/RSA/" style="font-size: 15px;">RSA</a> <a href="/tags/MySQL/" style="font-size: 15px;">MySQL</a> <a href="/tags/慢查询/" style="font-size: 15px;">慢查询</a> <a href="/tags/索引/" style="font-size: 15px;">索引</a> <a href="/tags/主从复制/" style="font-size: 15px;">主从复制</a> <a href="/tags/锁/" style="font-size: 15px;">锁</a> <a href="/tags/Redis/" style="font-size: 15px;">Redis</a> <a href="/tags/反向代理/" style="font-size: 15px;">反向代理</a> <a href="/tags/Nginx/" style="font-size: 15px;">Nginx</a> <a href="/tags/Ribbon/" style="font-size: 15px;">Ribbon</a> <a href="/tags/Spring-Boot/" style="font-size: 15px;">Spring Boot</a> <a href="/tags/异步/" style="font-size: 15px;">异步</a> <a href="/tags/ElasticSearch/" style="font-size: 15px;">ElasticSearch</a> <a href="/tags/Dubbo/" style="font-size: 15px;">Dubbo</a> <a href="/tags/Zookeeper/" style="font-size: 15px;">Zookeeper</a> <a href="/tags/Eureka/" style="font-size: 15px;">Eureka</a> <a href="/tags/Spring-Cloud/" style="font-size: 15px;">Spring Cloud</a> <a href="/tags/安全/" style="font-size: 15px;">安全</a> <a href="/tags/Spring-Security/" style="font-size: 15px;">Spring Security</a> <a href="/tags/热部署/" style="font-size: 15px;">热部署</a> <a href="/tags/监管/" style="font-size: 15px;">监管</a> <a href="/tags/缓存/" style="font-size: 15px;">缓存</a> <a href="/tags/Spring-Data-ElasticSearch/" style="font-size: 15px;">Spring Data ElasticSearch</a> <a href="/tags/SpringCloud-Config/" style="font-size: 15px;">SpringCloud Config</a> <a href="/tags/消息队列/" style="font-size: 15px;">消息队列</a> <a href="/tags/RabbitMQ/" style="font-size: 15px;">RabbitMQ</a> <a href="/tags/Spring/" style="font-size: 15px;">Spring</a> <a href="/tags/SpringCould-Config/" style="font-size: 15px;">SpringCould Config</a> <a href="/tags/多线程/" style="font-size: 15px;">多线程</a> <a href="/tags/ThreadLocal/" style="font-size: 15px;">ThreadLocal</a> <a href="/tags/Thymeleaf/" style="font-size: 15px;">Thymeleaf</a> <a href="/tags/页面静态化/" style="font-size: 15px;">页面静态化</a> <a href="/tags/Zuul/" style="font-size: 15px;">Zuul</a> <a href="/tags/面试题/" style="font-size: 15px;">面试题</a> <a href="/tags/数据校验/" style="font-size: 15px;">数据校验</a> <a href="/tags/Hibernate-Validator/" style="font-size: 15px;">Hibernate Validator</a> <a href="/tags/跨域问题/" style="font-size: 15px;">跨域问题</a></div></div><div class="widget"><div class="widget-title"><i class="fa fa-file-o"> 最近文章</i></div><ul class="post-list"><li class="post-list-item"><a class="post-list-link" href="/2019/10/21/单例模式/">单例模式</a></li><li class="post-list-item"><a class="post-list-link" href="/2019/10/14/SpringCould整合Config/">SpringCould整合Config</a></li><li class="post-list-item"><a class="post-list-link" href="/2019/10/13/String超详解/">String超详解</a></li><li class="post-list-item"><a class="post-list-link" href="/2019/10/12/ThreadLocal的简单介绍/">ThreadLocal的简单介绍</a></li><li class="post-list-item"><a class="post-list-link" href="/2019/10/09/缓存穿透、雪崩、击穿/">缓存穿透、雪崩、击穿</a></li><li class="post-list-item"><a class="post-list-link" href="/2019/09/29/SpringCloud-Config的基本使用/">SpringCloud Config的基本使用</a></li><li class="post-list-item"><a class="post-list-link" href="/2019/09/28/Zuul的基本使用/">Zuul的基本使用</a></li><li class="post-list-item"><a class="post-list-link" href="/2019/09/27/Hystrix-Dashboard的基本使用/">Hystrix Dashboard的基本使用</a></li><li class="post-list-item"><a class="post-list-link" href="/2019/09/26/Hystrix的基本使用/">Hystrix的基本使用</a></li><li class="post-list-item"><a class="post-list-link" href="/2019/09/25/Fegin的基本使用/">Fegin的基本使用</a></li></ul></div><div class="widget"><div class="widget-title"><i class="fa fa-external-link"> 友情链接</i></div><ul></ul><a href="https://www.zhongmin.cn" title="中民保险网" target="_blank">中民保险网</a><ul></ul><a href="https://www.lingju.ai/index" title="灵聚智能" target="_blank">灵聚智能</a></div></div></div><div class="pure-u-1 pure-u-md-3-4"><div id="footer">Copyright © 2019 <a href="/." rel="nofollow">Vic.</a> Powered by<a rel="nofollow" target="_blank" href="https://hexo.io"> Hexo.</a><a rel="nofollow" target="_blank" href="https://github.com/tufu9441/maupassant-hexo"> Theme</a> by<a rel="nofollow" target="_blank" href="https://github.com/pagecho"> Cho.</a></div></div></div><a class="show" id="rocket" href="#top"></a><script type="text/javascript" src="/js/totop.js?v=0.0.0" async></script><script type="text/javascript" src="//lib.baomitu.com/fancybox/3.5.7/jquery.fancybox.min.js" async></script><script type="text/javascript" src="/js/fancybox.js?v=0.0.0" async></script><link rel="stylesheet" type="text/css" href="//lib.baomitu.com/fancybox/3.5.7/jquery.fancybox.min.css"><script type="text/javascript" src="/js/search.js?v=0.0.0"></script><script>var search_path = 'search.xml';
+})</script></div></div></div><div class="pure-u-1-4 hidden_mid_and_down"><div id="sidebar"><div class="widget"><div class="search-form"><input id="local-search-input" placeholder="Search" type="text" name="q" results="0"><div id="local-search-result"></div></div></div><div class="widget"><div class="widget-title"><i class="fa fa-folder-o"> 分类</i></div><ul class="category-list"><li class="category-list-item"><a class="category-list-link" href="/categories/ElasticSearch/">ElasticSearch</a><span class="category-list-count">5</span></li><li class="category-list-item"><a class="category-list-link" href="/categories/Java基础/">Java基础</a><span class="category-list-count">1</span></li><li class="category-list-item"><a class="category-list-link" href="/categories/MySQL/">MySQL</a><span class="category-list-count">10</span></li><li class="category-list-item"><a class="category-list-link" href="/categories/Redis/">Redis</a><span class="category-list-count">7</span></li><li class="category-list-item"><a class="category-list-link" href="/categories/Spring/">Spring</a><span class="category-list-count">1</span></li><li class="category-list-item"><a class="category-list-link" href="/categories/Spring-Boot初级/">Spring Boot初级</a><span class="category-list-count">8</span></li><li class="category-list-item"><a class="category-list-link" href="/categories/Spring-Boot高级/">Spring Boot高级</a><span class="category-list-count">8</span></li><li class="category-list-item"><a class="category-list-link" href="/categories/Spring-Cloud/">Spring Cloud</a><span class="category-list-count">9</span></li><li class="category-list-item"><a class="category-list-link" href="/categories/多线程/">多线程</a><span class="category-list-count">4</span></li><li class="category-list-item"><a class="category-list-link" href="/categories/源码分析/">源码分析</a><span class="category-list-count">2</span></li><li class="category-list-item"><a class="category-list-link" href="/categories/设计模式/">设计模式</a><span class="category-list-count">1</span></li></ul></div><div class="widget"><div class="widget-title"><i class="fa fa-star-o"> 标签</i></div><div class="tagcloud"><a href="/tags/邮件/" style="font-size: 15px;">邮件</a> <a href="/tags/搜索引擎/" style="font-size: 15px;">搜索引擎</a> <a href="/tags/ik分词器/" style="font-size: 15px;">ik分词器</a> <a href="/tags/Kibana/" style="font-size: 15px;">Kibana</a> <a href="/tags/Hexo/" style="font-size: 15px;">Hexo</a> <a href="/tags/负载均衡，远程调用，Ribbon/" style="font-size: 15px;">负载均衡，远程调用，Ribbon</a> <a href="/tags/登录/" style="font-size: 15px;">登录</a> <a href="/tags/JWT/" style="font-size: 15px;">JWT</a> <a href="/tags/RSA/" style="font-size: 15px;">RSA</a> <a href="/tags/Hystrix/" style="font-size: 15px;">Hystrix</a> <a href="/tags/MySQL/" style="font-size: 15px;">MySQL</a> <a href="/tags/负载均衡/" style="font-size: 15px;">负载均衡</a> <a href="/tags/远程调用/" style="font-size: 15px;">远程调用</a> <a href="/tags/Fegin/" style="font-size: 15px;">Fegin</a> <a href="/tags/索引/" style="font-size: 15px;">索引</a> <a href="/tags/主从复制/" style="font-size: 15px;">主从复制</a> <a href="/tags/慢查询/" style="font-size: 15px;">慢查询</a> <a href="/tags/锁/" style="font-size: 15px;">锁</a> <a href="/tags/Redis/" style="font-size: 15px;">Redis</a> <a href="/tags/反向代理/" style="font-size: 15px;">反向代理</a> <a href="/tags/Nginx/" style="font-size: 15px;">Nginx</a> <a href="/tags/Spring-Boot/" style="font-size: 15px;">Spring Boot</a> <a href="/tags/Ribbon/" style="font-size: 15px;">Ribbon</a> <a href="/tags/异步/" style="font-size: 15px;">异步</a> <a href="/tags/ElasticSearch/" style="font-size: 15px;">ElasticSearch</a> <a href="/tags/Dubbo/" style="font-size: 15px;">Dubbo</a> <a href="/tags/Zookeeper/" style="font-size: 15px;">Zookeeper</a> <a href="/tags/Eureka/" style="font-size: 15px;">Eureka</a> <a href="/tags/Spring-Cloud/" style="font-size: 15px;">Spring Cloud</a> <a href="/tags/安全/" style="font-size: 15px;">安全</a> <a href="/tags/Spring-Security/" style="font-size: 15px;">Spring Security</a> <a href="/tags/热部署/" style="font-size: 15px;">热部署</a> <a href="/tags/监管/" style="font-size: 15px;">监管</a> <a href="/tags/消息队列/" style="font-size: 15px;">消息队列</a> <a href="/tags/RabbitMQ/" style="font-size: 15px;">RabbitMQ</a> <a href="/tags/缓存/" style="font-size: 15px;">缓存</a> <a href="/tags/Spring-Data-ElasticSearch/" style="font-size: 15px;">Spring Data ElasticSearch</a> <a href="/tags/SpringCloud-Config/" style="font-size: 15px;">SpringCloud Config</a> <a href="/tags/SpringCould-Config/" style="font-size: 15px;">SpringCould Config</a> <a href="/tags/Spring/" style="font-size: 15px;">Spring</a> <a href="/tags/Thymeleaf/" style="font-size: 15px;">Thymeleaf</a> <a href="/tags/页面静态化/" style="font-size: 15px;">页面静态化</a> <a href="/tags/多线程/" style="font-size: 15px;">多线程</a> <a href="/tags/ThreadLocal/" style="font-size: 15px;">ThreadLocal</a> <a href="/tags/Zuul/" style="font-size: 15px;">Zuul</a> <a href="/tags/面试题/" style="font-size: 15px;">面试题</a> <a href="/tags/跨域问题/" style="font-size: 15px;">跨域问题</a> <a href="/tags/数据校验/" style="font-size: 15px;">数据校验</a> <a href="/tags/Hibernate-Validator/" style="font-size: 15px;">Hibernate Validator</a></div></div><div class="widget"><div class="widget-title"><i class="fa fa-file-o"> 最近文章</i></div><ul class="post-list"><li class="post-list-item"><a class="post-list-link" href="/2019/10/21/单例模式/">单例模式</a></li><li class="post-list-item"><a class="post-list-link" href="/2019/10/14/SpringCould整合Config/">SpringCould整合Config</a></li><li class="post-list-item"><a class="post-list-link" href="/2019/10/13/String超详解/">String超详解</a></li><li class="post-list-item"><a class="post-list-link" href="/2019/10/12/ThreadLocal的简单介绍/">ThreadLocal的简单介绍</a></li><li class="post-list-item"><a class="post-list-link" href="/2019/10/09/缓存穿透、雪崩、击穿/">缓存穿透、雪崩、击穿</a></li><li class="post-list-item"><a class="post-list-link" href="/2019/09/29/SpringCloud-Config的基本使用/">SpringCloud Config的基本使用</a></li><li class="post-list-item"><a class="post-list-link" href="/2019/09/28/Zuul的基本使用/">Zuul的基本使用</a></li><li class="post-list-item"><a class="post-list-link" href="/2019/09/27/Hystrix-Dashboard的基本使用/">Hystrix Dashboard的基本使用</a></li><li class="post-list-item"><a class="post-list-link" href="/2019/09/26/Hystrix的基本使用/">Hystrix的基本使用</a></li><li class="post-list-item"><a class="post-list-link" href="/2019/09/25/Fegin的基本使用/">Fegin的基本使用</a></li></ul></div><div class="widget"><div class="widget-title"><i class="fa fa-external-link"> 友情链接</i></div><ul></ul><a href="https://www.zhongmin.cn" title="中民保险网" target="_blank">中民保险网</a><ul></ul><a href="https://www.lingju.ai/index" title="灵聚智能" target="_blank">灵聚智能</a></div></div></div><div class="pure-u-1 pure-u-md-3-4"><div id="footer">Copyright © 2019 <a href="/." rel="nofollow">Vic.</a> Powered by<a rel="nofollow" target="_blank" href="https://hexo.io"> Hexo.</a><a rel="nofollow" target="_blank" href="https://github.com/tufu9441/maupassant-hexo"> Theme</a> by<a rel="nofollow" target="_blank" href="https://github.com/pagecho"> Cho.</a></div></div></div><a class="show" id="rocket" href="#top"></a><script type="text/javascript" src="/js/totop.js?v=0.0.0" async></script><script type="text/javascript" src="//lib.baomitu.com/fancybox/3.5.7/jquery.fancybox.min.js" async></script><script type="text/javascript" src="/js/fancybox.js?v=0.0.0" async></script><link rel="stylesheet" type="text/css" href="//lib.baomitu.com/fancybox/3.5.7/jquery.fancybox.min.css"><script type="text/javascript" src="/js/search.js?v=0.0.0"></script><script>var search_path = 'search.xml';
 if (search_path.length == 0) {
    search_path = 'search.xml';
 }
