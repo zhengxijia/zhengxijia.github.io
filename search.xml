@@ -283,7 +283,9 @@
       
         <tags>
             
-            <tag> 负载均衡，远程调用，Ribbon </tag>
+            <tag> 注册中心 </tag>
+            
+            <tag> Eureka </tag>
             
         </tags>
       
@@ -621,13 +623,13 @@
       
         <tags>
             
+            <tag> Eureka </tag>
+            
             <tag> Spring Boot </tag>
             
             <tag> Dubbo </tag>
             
             <tag> Zookeeper </tag>
-            
-            <tag> Eureka </tag>
             
             <tag> Spring Cloud </tag>
             
